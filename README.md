@@ -23,8 +23,8 @@ Not yet.
 
 ## Support
 
-This software is provided "as is", without warranty or support of any kind, express or implied. See [license](https://github.com/heroku/react-refetch/blob/master/LICENSE.md) for details.
+This software is provided "as is", without warranty or support of any kind, express or implied. See [license](https://github.com/tomat/react-reflorp/blob/master/LICENSE.md) for details.
 
 ## License
 
-[MIT](https://github.com/heroku/react-reflorp/blob/master/LICENSE.md)
+[MIT](https://github.com/tomat/react-reflorp/blob/master/LICENSE.md)
