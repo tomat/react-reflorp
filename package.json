@@ -1,7 +1,7 @@
 {
   "name": "react-reflorp",
   "version": "0.6.3",
-  "description": "A simple, declarative, and composable way to reflorp your flux.",
+  "description": "Basically a simple ORM using React Refetch as a backend, but the data is stored in the Redux store.",
   "main": "./lib/index.js",
   "scripts": {
     "build": "babel src --out-dir lib",
