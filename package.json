@@ -1,6 +1,6 @@
 {
   "name": "react-reflorp",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A simple, declarative, and composable way to reflorp your flux.",
   "main": "./lib/index.js",
   "scripts": {
