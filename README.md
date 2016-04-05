@@ -1,7 +1,7 @@
 React Reflorp
 =========================
 
-A simple, declarative, and composable way to reflorp your flux.
+Basically a simple ORM using [React Refetch](https://github.com/heroku/react-refetch) as a backend, but the data is stored in the [Redux](https://github.com/reactjs/redux) store.
 
 ## Installation
 
@@ -17,134 +17,164 @@ This assumes that you’re using [npm](http://npmjs.com/) package manager with a
 
 This project uses [React Redux](https://github.com/rackt/react-redux) and [React Refetch](https://github.com/heroku/react-refetch).
 
-## Example
+## Set up
 
 Configure Reflorp, this needs to happen before any code using a Reflorp decorator is loaded, and needs the store.
 
-    # store.js
-    
-    import { reflorpSetStore, reflorpSetEntities, reflorpSetBaseUrl } from 'react-reflorp';
-    
-    [...]
-    
-    reflorpSetBaseUrl('/api');
-    reflorpSetEntities({
-      board: {},
-      note: {
-        parent: 'board',
-      },
-    });
-    reflorpSetStore(store);
+In the following example code we have a simple app with boards and notes. Each board has a number of notes.
 
-Add the Reflorp Redux reducer with the key "reflorp" (important!).
-    
-    # reducers.js
-    
-    import { reflorpReducer } from 'react-reflorp';
-    
-    export default {
-      reflorp: reflorpReducer,
-    };
+```javascript
+# store.js
 
-Wrap your App component in ReflorpWrapper:
+import { reflorpSetStore, reflorpSetEntities, reflorpSetBaseUrl } from 'react-reflorp';
 
-    # App.js
-    
-    import { ReflorpWrapper } from 'react-reflorp';
-    
-    [...]
-    
-    const App = ({ children }) => (
-      <ReflorpWrapper>
-        <div className="myApp">
-            {children}
-        </div>
-      </ReflorpWrapper>
+[...]
+
+reflorpSetBaseUrl('/api');
+reflorpSetEntities({
+  board: {},
+  note: {
+    parent: 'board',
+  },
+});
+reflorpSetStore(store);
+```
+
+Add the Reflorp Redux reducer with the key `reflorp` (important!).
+
+```javascript
+# reducers.js
+
+import { reflorpReducer } from 'react-reflorp';
+
+export default {
+  reflorp: reflorpReducer,`
+};
+``
+
+Add the `ReflorpWrapper` component to your upmost component (i e `App`):
+
+```javascript
+# App.js
+
+import { ReflorpWrapper } from 'react-reflorp';
+
+[...]
+
+const App = ({ children }) => (
+  <div className="app">
+    <ReflorpWrapper />
+    {children}
+  </div>
+);
+```
+
+## Usage
+
+Both the `@refetch` and the `@redux` decorator will transparently handle data that does not match a configured entity as if it was sent to the regular `@connect` decorator.
+
+### Refetch (@refetch)
+
+Corresponds to the `@connect` decorator from `react-refetch`.
+
+Use the `@refetch` decorator to load data.
+
+Note that we don't actually catch any Reflorp props in this example, since all the data will be stored in the Redux store, and we don't use the data in this component anyway. Also, it is probably a bad idea to mix `@refetch` with `@redux` on the same component, use a wrapper!
+
+```javascript
+# ViewBoardPage.js
+
+import React, { PropTypes, Component } from 'react';
+import ViewBoard from 'components/ViewBoard';
+import { PromiseState } from 'react-refetch';
+import { refetch } from 'react-reflorp';
+
+@refetch(({ params }) => ({
+  board: { id: params.id },       // fetch the board data: GET /api/boards/${params.id}
+  notes: { parentId: params.id }, // fetch the notes belonging to this board: GET /api/boards/${params.id}/notes
+  foobar: { url: '/foo/bar' },    // regular Refetch
+}))
+export default class ViewBoardPage extends Component {
+  static propTypes = {
+    params: PropTypes.object,
+    foobar: PropTypes.instanceOf(PromiseState),
+  };
+
+  render() {
+    const { params } = this.props;
+
+    return (
+      <ViewBoard id={params.id} />
     );
+  }
+}
+```
 
-Use the @refetch decorator to load data:
+### Redux (@redux)
 
-    # ViewBoardPage.js
-    
-    import React, { PropTypes, Component } from 'react';
-    import ViewBoard from 'components/ViewBoard';
-    import { refetch } from 'react-reflorp';
-    
-    @refetch(({ params }) => ({
-      board: { id: params.id },
-      notes: { parentId: params.id },
-    }))
-    export default class ViewBoardPage extends Component {
-      static propTypes = {
-        params: PropTypes.object,
-      };
-    
-      render() {
-        const { params } = this.props;
-    
-        return (
-          <ViewBoard id={params.id} />
-        );
-      }
-    }
+Corresponds to the `@connect` decorator from `react-redux`. 
 
-Use the @redux decorator to inject the data and helper functions:
+Use the `@redux` decorator to inject data and helper functions. Everything that does not match an entity that is configured in Reflorp will be transparently handled as regular Redux:
 
-    import React, { PropTypes, Component } from 'react';
-    import { PromiseState } from 'react-refetch';
-    import { redux } from 'react-reflorp';
-    import Note from 'components/Note';
-    import LoadMoreButton from 'components/LoadMoreButton';
-    
-    @redux((state, props) => ({
-      board: props.id,
-      notes: {
-        parentId: props.id,
-        then: (notes) => (notes || null) && notes.sort((note1, note2) => note1.nr > note2.nr),
-      },
-      notesLoadMore: { parentId: props.id },
-    }))
-    export default class ViewBoard extends Component {
-      static propTypes = {
-        id: PropTypes.any,
-        board: PropTypes.instanceOf(PromiseState).isRequired,
-        notes: PropTypes.instanceOf(PromiseState).isRequired,
-        notesLoadMore: PropTypes.func,
-      };
-    
-      render() {
-        const { board, notes, id, notesLoadMore } = this.props;
-    
-        const view = PromiseState.all([board, notes]);
-    
-        let note;
-    
-        return (
-          <div className={['hasLoader', (view.pending ? 'loading' : '')].join(' ')}>
-            <Choose>
-              <When condition={view.fulfilled}>
-                <h1>{board.value.title}</h1>
-                <div className="container-fluid">
-                  <For each="note" of={notes.value} index="i">
-                    <Note key={note.id} note={note} />
-                  </For>
-                </div>
-                <If condition={board.value.notesCount > notes.value.length}>
-                  <div key="loadMoreButton" className="text-center">
-                    <LoadMoreButton onClick={notesLoadMore} loading={view.refreshing} />
-                  </div>
-                </If>
-              </When>
-              <When condition={view.rejected}>
-                <div className="alert alert-danger">
-                  <span>{view.reason}</span>
-                </div>
-              </When>
-            </Choose>
-          </div>
-        );
-      }
-    }
+```javascript
+import React, { PropTypes, Component } from 'react';
+import { PromiseState } from 'react-refetch';
+import { redux } from 'react-reflorp';
+import Note from 'components/Note';
+import LoadMoreButton from 'components/LoadMoreButton';
+
+@redux((state, props) => ({
+  board: props.id,                       // injects the board data
+  notes: {                               // injects the notes data, sorted by nr
+    parentId: props.id,
+    then: (notes) => (notes || null) && notes.sort((note1, note2) => note1.nr > note2.nr),
+  },
+  notesLoadMore: { parentId: props.id }, // injects a function that loads the next page of notes: GET /api/boards/${props.id}/notes?page=2
+  bazqux: state.bazqux,                  // handled by Redux as usual
+}))
+export default class ViewBoard extends Component {
+  static propTypes = {
+    id: PropTypes.any,
+    board: PropTypes.instanceOf(PromiseState).isRequired,
+    notes: PropTypes.instanceOf(PromiseState).isRequired,
+    notesLoadMore: PropTypes.func,
+    bazqux: PropTypes.any,
+  };
+
+  render() {
+    const { board, notes, id, notesLoadMore } = this.props;
+
+    const view = PromiseState.all([board, notes]);
+
+    let note;
+
+    return (
+      <div className={['hasLoader', (view.pending ? 'loading' : '')].join(' ')}>
+        <Choose>
+          <When condition={view.fulfilled}>
+            <h1>{board.value.title}</h1>
+            <div className="container-fluid">
+              <For each="note" of={notes.value} index="i">
+                <Note key={note.id} note={note} />
+              </For>
+            </div>
+            <If condition={board.value.notesCount > notes.value.length}>
+              <div key="loadMoreButton" className="text-center">
+                <LoadMoreButton onClick={notesLoadMore} loading={view.refreshing} />
+              </div>
+            </If>
+          </When>
+          <When condition={view.rejected}>
+            <div className="alert alert-danger">
+              <span>{view.reason}</span>
+            </div>
+          </When>
+        </Choose>
+      </div>
+    );
+  }
+}
+```
 
 ## Support
 
