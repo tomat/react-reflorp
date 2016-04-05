@@ -20,7 +20,7 @@ Configure Reflorp, this needs to happen before any code using a Reflorp decorato
 In the following example code we have a simple app with boards and notes. Each board has a number of notes.
 
 ```javascript
-# store.js
+// store.js
 
 import { reflorpSetStore, reflorpSetEntities, reflorpSetBaseUrl } from 'react-reflorp';
 
@@ -39,19 +39,19 @@ reflorpSetStore(store);
 Add the Reflorp Redux reducer with the key `reflorp` (important!).
 
 ```javascript
-# reducers.js
+// reducers.js
 
 import { reflorpReducer } from 'react-reflorp';
 
 export default {
-  reflorp: reflorpReducer,`
+  reflorp: reflorpReducer,
 };
 ```
 
 Add the `ReflorpWrapper` component to your upmost component (i e `App`):
 
 ```javascript
-# App.js
+// App.js
 
 import { ReflorpWrapper } from 'react-reflorp';
 
@@ -78,7 +78,7 @@ Use the `@refetch` decorator to load data.
 Note that we don't actually catch any Reflorp props in this example, since all the data will be stored in the Redux store, and we don't use the data in this component anyway. Also, it is probably a bad idea to mix `@refetch` with `@redux` on the same component, use a wrapper!
 
 ```javascript
-# ViewBoardPage.js
+// ViewBoardPage.js
 
 import React, { PropTypes, Component } from 'react';
 import ViewBoard from 'components/ViewBoard';
@@ -113,6 +113,8 @@ Corresponds to the `@connect` decorator from `react-redux`.
 Use the `@redux` decorator to inject data and helper functions. Everything that does not match an entity that is configured in Reflorp will be transparently handled as regular Redux:
 
 ```javascript
+// ViewBoard.js
+
 import React, { PropTypes, Component } from 'react';
 import { PromiseState } from 'react-refetch';
 import { redux } from 'react-reflorp';
