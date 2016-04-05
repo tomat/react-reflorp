@@ -13,10 +13,6 @@ npm install --save react-reflorp
 
 This assumes that you’re using [npm](http://npmjs.com/) package manager with a module bundler like [Webpack](http://webpack.github.io) or [Browserify](http://browserify.org/) to consume [CommonJS modules](http://webpack.github.io/docs/commonjs.html).
 
-## Motivation
-
-This project uses [React Redux](https://github.com/rackt/react-redux) and [React Refetch](https://github.com/heroku/react-refetch).
-
 ## Set up
 
 Configure Reflorp, this needs to happen before any code using a Reflorp decorator is loaded, and needs the store.
@@ -50,7 +46,7 @@ import { reflorpReducer } from 'react-reflorp';
 export default {
   reflorp: reflorpReducer,`
 };
-``
+```
 
 Add the `ReflorpWrapper` component to your upmost component (i e `App`):
 
