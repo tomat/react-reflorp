@@ -7,7 +7,8 @@
     "build": "babel src --out-dir lib",
     "clean": "rimraf lib dist coverage",
     "lint": "eslint src test",
-    "prepublish": "npm run clean && npm run lint && npm run build"
+    "prepublish": "npm run clean && npm run lint && npm run build",
+    "watch": "npm run build -- -w"
   },
   "repository": {
     "type": "git",
@@ -50,11 +51,14 @@
     "istanbul": "^0.3.17",
     "jsdom": "~5.4.3",
     "mocha": "^2.2.5",
-    "react": "^0.14.0",
+    "react": "0.14.8",
     "react-addons-test-utils": "^0.14.0",
-    "react-dom": "^0.14.0",
+    "react-dom": "0.14.8",
+    "react-redux": "4.4.1",
+    "react-refetch": "1.0.0-beta.0",
+    "redux": "3.3.1",
     "rimraf": "^2.3.4",
-    "webpack": "^1.11.0"
+    "webpack": "2.1.0-beta.4"
   },
   "dependencies": {
     "hoist-non-react-statics": "^1.0.3",
