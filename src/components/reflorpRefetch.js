@@ -1,5 +1,5 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { update, append, refreshing, increaseCount } from '../utils/reducer';
+import { update, updateList, append, refreshing, increaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 
@@ -134,20 +134,30 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
       const entityName = editMatches[1];
       const entityConfiguration = entities[entityName];
       if (entityConfiguration) {
-        realMapStateToProps[key] = (data, id, parentId = false) => {
+        realMapStateToProps[key] = (id, parentId = false, data) => {
           let url;
           let hash;
+          let listHash;
+
           if (entityConfiguration.parent && parentId) {
             url = getUrl(entityName, id, parentId);
             hash = getName(entityName, id, parentId);
+            listHash = getName(entityName, false, parentId);
           } else {
             url = getUrl(entityName, id);
             hash = getName(entityName, id);
           }
 
-          store.dispatch(update(`${hash}EditResponse`, PromiseState.create()));
-
           const ret = {};
+
+          // Reset errors if called with data = false
+          if (data === false) {
+            store.dispatch(update(`${hash}EditResponse`, null));
+
+            return ret;
+          }
+
+          store.dispatch(update(`${hash}EditResponse`, PromiseState.create()));
 
           ret[`${hash}EditResponse`] = {
             url,
@@ -156,6 +166,9 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             force: true,
             then: (value) => {
               store.dispatch(update(`${hash}EditResponse`, PromiseState.resolve(value)));
+              if (listHash) {
+                store.dispatch(updateList(id, listHash, value));
+              }
 
               return {
                 value,

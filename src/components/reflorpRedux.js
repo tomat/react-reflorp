@@ -18,6 +18,7 @@ export default (mappings, ...restRedux) => {
       }
 
       const id = entityMapping.id || entityMapping.parentId || 0;
+      const parentId = entityMapping.parentId || false;
       const then = entityMapping.then || ((value) => value);
       const pluralMatches = entity.match(/^(.+)s$/);
       const createMatches = entity.match(/^(.+)Create$/);
@@ -42,11 +43,10 @@ export default (mappings, ...restRedux) => {
         ret[entity] = state.reflorp[`${getName(createResponseMatches[1], false, parentId)}CreateResponse`];
       // Function for editing an entity
       } else if (editMatches && entities[editMatches[1]]) {
-        ret[entity] = state.reflorp[entity];
+        ret[entity] = state.reflorp[`${editMatches[1]}Edit`].bind(null, id, parentId);
       // Response to entity edit
       } else if (editResponseMatches && entities[editResponseMatches[1]]) {
-        const parentId = id === 0 ? false : id;
-        ret[entity] = state.reflorp[`${getName(editResponseMatches[1], false, parentId)}EditResponse`];
+        ret[entity] = state.reflorp[`${getName(editResponseMatches[1], id, parentId)}EditResponse`];
       // Function for loading next page of a list of entities
       } else if (loadMorePluralMatches && entities[loadMorePluralMatches[1]]) {
         const page = state.reflorp[`${getName(loadMorePluralMatches[1], false, id)}Page`] || 1;

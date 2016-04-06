@@ -8,6 +8,20 @@ const reducer = (state = {}, action) => {
       data[action.name] = action.data;
 
       return data;
+    case 'UPDATE_LIST':
+      if (data[action.listName] && data[action.listName].value) {
+        const newValue = data[action.listName].value.map((item) => {
+          if (item.id === action.id) {
+            return action.data;
+          }
+
+          return item;
+        });
+
+        data[action.listName] = PromiseState.resolve(newValue);
+      }
+
+      return data;
     case 'APPEND':
       if (data[action.name] && data[action.name].value) {
         const done = [];
@@ -47,6 +61,13 @@ export default reducer;
 export const update = (name, data) => ({
   type: 'UPDATE',
   name,
+  data,
+});
+
+export const updateList = (id, listName, data) => ({
+  type: 'UPDATE_LIST',
+  id,
+  listName,
   data,
 });
 
