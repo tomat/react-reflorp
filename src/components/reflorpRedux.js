@@ -30,8 +30,17 @@ export default (mappings, ...restRedux) => {
       const loadMorePluralMatches = entity.match(/^(.+)sLoadMore$/);
       const loadMoreMatches = entity.match(/^(.+)LoadMore$/);
 
+      // Single entity belonging to parent in editing mode (receives draft)
+      if (entities[entity] && parentId && entityMapping.edit) {
+        ret[entity] = state.reflorp[getName(entity, id, parentId) + 'Draft'];
+      // Single entity belonging to parent
+      } else if (entities[entity] && parentId) {
+        ret[entity] = state.reflorp[getName(entity, id, parentId)];
+      // Simple single entity in editing mode (receives draft)
+      } else if (entities[entity] && entityMapping.edit) {
+        ret[entity] = state.reflorp[getName(entity, id) + 'Draft'];
       // Simple single entity
-      if (entities[entity]) {
+      } else if (entities[entity]) {
         ret[entity] = state.reflorp[getName(entity, id)];
       // List of entities belonging to a parent
       } else if (pluralMatches && entities[pluralMatches[1]]) {

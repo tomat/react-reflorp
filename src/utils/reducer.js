@@ -8,6 +8,10 @@ const reducer = (state = {}, action) => {
       data[action.name] = action.data;
 
       return data;
+    case 'UPDATE_DRAFT':
+      data[action.name + 'Draft'] = action.data;
+
+      return data;
     case 'UPDATE_LIST':
       if (data[action.listName] && data[action.listName].value) {
         const newValue = data[action.listName].value.map((item) => {
@@ -66,6 +70,12 @@ export default reducer;
 
 export const update = (name, data) => ({
   type: 'UPDATE',
+  name,
+  data,
+});
+
+export const updateDraft = (name, data) => ({
+  type: 'UPDATE_DRAFT',
   name,
   data,
 });

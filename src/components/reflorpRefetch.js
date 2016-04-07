@@ -1,5 +1,5 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { update, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
+import { update, updateDraft, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 
@@ -35,10 +35,15 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
     if (entities[key]) {
       const hashedName = getName(key, realMap);
       store.dispatch(update(hashedName, PromiseState.create()));
+      store.dispatch(updateDraft(hashedName, PromiseState.create()));
       realMapStateToProps[key] = {
         url: getUrl(key, realMap),
         then: (value) => {
           store.dispatch(update(hashedName, PromiseState.resolve(value)));
+
+          const draft = PromiseState.resolve(value);
+          draft.saved = true;
+          store.dispatch(updateDraft(hashedName, draft));
 
           return {
             value,
@@ -60,6 +65,15 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
         url: getUrl(entityName, false, realMap),
         then: (value) => {
           store.dispatch(update(hashedName, PromiseState.resolve(value)));
+
+          value.forEach((item) => {
+            const itemHash = getName(entityName, item.id, realMap);
+            store.dispatch(update(itemHash, PromiseState.resolve(item)));
+
+            const draft = PromiseState.resolve(item);
+            draft.saved = true;
+            store.dispatch(updateDraft(itemHash, draft));
+          });
 
           return {
             value,
@@ -99,6 +113,14 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             force: true,
             then: (value) => {
               store.dispatch(update(`${hash}CreateResponse`, PromiseState.resolve(value)));
+
+              const singleHash = getName(entityName, value.id, (parentId ? parentId : false));
+              store.dispatch(update(singleHash, PromiseState.resolve(value)));
+
+              const draft = PromiseState.resolve(value);
+              draft.saved = true;
+              store.dispatch(updateDraft(singleHash, draft));
+
               store.dispatch(append(hash, value));
 
               if (entityConfiguration.count) {
@@ -167,6 +189,12 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             force: true,
             then: (value) => {
               store.dispatch(update(`${hash}EditResponse`, PromiseState.resolve(value)));
+              store.dispatch(update(hash, PromiseState.resolve(value)));
+
+              const draft = PromiseState.resolve(value);
+              draft.saved = true;
+              store.dispatch(updateDraft(hash, draft));
+
               if (listHash) {
                 store.dispatch(updateList(id, listHash, value));
               }
@@ -224,6 +252,9 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             force: true,
             then: (value) => {
               store.dispatch(update(`${hash}DeleteResponse`, PromiseState.resolve({})));
+              store.dispatch(update(hash, PromiseState.resolve({})));
+              store.dispatch(updateDraft(hash, PromiseState.resolve({})));
+
               if (listHash) {
                 store.dispatch(updateList(id, listHash, false));
               }
