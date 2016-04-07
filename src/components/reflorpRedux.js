@@ -25,6 +25,8 @@ export default (mappings, ...restRedux) => {
       const createResponseMatches = entity.match(/^(.+)CreateResponse$/);
       const editMatches = entity.match(/^(.+)Edit$/);
       const editResponseMatches = entity.match(/^(.+)EditResponse$/);
+      const deleteMatches = entity.match(/^(.+)Delete$/);
+      const deleteResponseMatches = entity.match(/^(.+)DeleteResponse$/);
       const loadMorePluralMatches = entity.match(/^(.+)sLoadMore$/);
       const loadMoreMatches = entity.match(/^(.+)LoadMore$/);
 
@@ -47,6 +49,12 @@ export default (mappings, ...restRedux) => {
       // Response to entity edit
       } else if (editResponseMatches && entities[editResponseMatches[1]]) {
         ret[entity] = state.reflorp[`${getName(editResponseMatches[1], id, parentId)}EditResponse`];
+      // Function for deleting an entity
+      } else if (deleteMatches && entities[deleteMatches[1]]) {
+        ret[entity] = state.reflorp[`${deleteMatches[1]}Delete`].bind(null, id, parentId);
+      // Response to entity delete
+      } else if (deleteResponseMatches && entities[deleteResponseMatches[1]]) {
+        ret[entity] = state.reflorp[`${getName(deleteResponseMatches[1], id, parentId)}DeleteResponse`];
       // Function for loading next page of a list of entities
       } else if (loadMorePluralMatches && entities[loadMorePluralMatches[1]]) {
         const page = state.reflorp[`${getName(loadMorePluralMatches[1], false, id)}Page`] || 1;

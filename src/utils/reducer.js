@@ -16,7 +16,7 @@ const reducer = (state = {}, action) => {
           }
 
           return item;
-        });
+        }).filter((item) => item !== false);
 
         data[action.listName] = PromiseState.resolve(newValue);
       }
@@ -48,6 +48,12 @@ const reducer = (state = {}, action) => {
     case 'INCREASE_COUNT':
       if (data[action.name] && data[action.name].value && data[action.name].value[action.key]) {
         data[action.name].value[action.key]++;
+      }
+
+      return data;
+    case 'DECREASE_COUNT':
+      if (data[action.name] && data[action.name].value && data[action.name].value[action.key]) {
+        data[action.name].value[action.key]--;
       }
 
       return data;
@@ -84,6 +90,12 @@ export const refreshing = (name) => ({
 
 export const increaseCount = (name, key) => ({
   type: 'INCREASE_COUNT',
+  name,
+  key,
+});
+
+export const decreaseCount = (name, key) => ({
+  type: 'DECREASE_COUNT',
   name,
   key,
 });

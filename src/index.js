@@ -9,5 +9,6 @@ export { updateList as reflorpUpdateList } from './utils/reducer';
 export { append as reflorpAppend } from './utils/reducer';
 export { refreshing as reflorpRefreshing } from './utils/reducer';
 export { increaseCount as reflorpIncreaseCount } from './utils/reducer';
+export { decreaseCount as reflorpDecreaseCount } from './utils/reducer';
 export { default as ReflorpWrapper } from './components/ReflorpWrapper';
 export { PromiseState } from 'react-refetch';

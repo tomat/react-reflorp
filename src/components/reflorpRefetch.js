@@ -1,5 +1,5 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { update, updateList, append, refreshing, increaseCount } from '../utils/reducer';
+import { update, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 
@@ -29,6 +29,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
     const pluralMatches = key.match(/^(.+)s$/);
     const createMatches = key.match(/^(.+)Create$/);
     const editMatches = key.match(/^(.+)Edit/);
+    const deleteMatches = key.match(/^(.+)Delete/);
     const loadMoreMatches = key.match(/^(.+)s?LoadMore$/);
 
     if (entities[key]) {
@@ -183,6 +184,68 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             },
             catch: (exception) => {
               store.dispatch(update(`${hash}EditResponse`, PromiseState.reject({
+                message: exception.cause.error,
+              })));
+
+              return {
+                value: null,
+              };
+            },
+          };
+
+          return ret;
+        };
+      }
+    } else if (deleteMatches) {
+      const entityName = deleteMatches[1];
+      const entityConfiguration = entities[entityName];
+      if (entityConfiguration) {
+        realMapStateToProps[key] = (id, parentId = false) => {
+          let url;
+          let hash;
+          let listHash;
+
+          if (entityConfiguration.parent && parentId) {
+            url = getUrl(entityName, id, parentId);
+            hash = getName(entityName, id, parentId);
+            listHash = getName(entityName, false, parentId);
+          } else {
+            url = getUrl(entityName, id);
+            hash = getName(entityName, id);
+          }
+
+          const ret = {};
+
+          store.dispatch(update(`${hash}DeleteResponse`, PromiseState.create()));
+
+          ret[`${hash}DeleteResponse`] = {
+            url,
+            method: 'DELETE',
+            force: true,
+            then: (value) => {
+              store.dispatch(update(`${hash}DeleteResponse`, PromiseState.resolve({})));
+              if (listHash) {
+                store.dispatch(updateList(id, listHash, false));
+              }
+
+              if (entityConfiguration.count) {
+                const parentHash = getName(entityConfiguration.parent, parentId);
+                store.dispatch(decreaseCount(parentHash, entityConfiguration.count));
+              }
+
+              return {
+                value,
+                andThen: (newData) => {
+                  if (entityConfiguration.onDelete) {
+                    entityConfiguration.onDelete(newData);
+                  }
+
+                  return {};
+                },
+              };
+            },
+            catch: (exception) => {
+              store.dispatch(update(`${hash}DeleteResponse`, PromiseState.reject({
                 message: exception.cause.error,
               })));
 
