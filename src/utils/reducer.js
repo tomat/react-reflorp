@@ -50,19 +50,19 @@ const reducer = (state = {}, action) => {
       return state;
     case 'INCREASE_COUNT':
       if (state[action.name] && state[action.name].value && state[action.name].value[action.key]) {
-        const newValue = extend(true, {}, state[action.name].value);
-        newValue[action.key]++;
+        const newState = extend(true, {}, state[action.name]);
+        newState[action.key].value++;
 
-        state[action.name].value = newValue;
+        state[action.name] = newState;
       }
 
       return state;
     case 'DECREASE_COUNT':
       if (state[action.name] && state[action.name].value && state[action.name].value[action.key]) {
-        const newValue = extend(true, {}, state[action.name].value);
-        newValue[action.key]--;
+        const newState = extend(true, {}, state[action.name]);
+        newState[action.key].value--;
 
-        state[action.name].value = newValue;
+        state[action.name] = newState;
       }
 
       return state;
