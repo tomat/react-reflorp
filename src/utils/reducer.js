@@ -4,16 +4,21 @@ import extend from 'extend';
 const reducer = (state = {}, action) => {
   switch (action.type) {
     case 'UPDATE':
-      state[action.name] = action.data;
+      const newState = extend(true, {}, state);
+      newState[action.name] = action.data;
 
-      return state;
+      return newState;
     case 'UPDATE_DRAFT':
-      state[action.name + 'Draft'] = action.data;
+      {
+        const newState = extend(true, {}, state);
+        newState[action.name + 'Draft'] = action.data;
 
-      return state;
+        return newState;
+      }
     case 'UPDATE_LIST':
       if (state[action.listName] && state[action.listName].value) {
-        const newValue = state[action.listName].value.map((item) => {
+        const newState = extend(true, {}, state);
+        const newValue = newState[action.listName].value.map((item) => {
           if (item.id === action.id) {
             return action.data;
           }
@@ -21,14 +26,17 @@ const reducer = (state = {}, action) => {
           return item;
         }).filter((item) => item !== false);
 
-        state[action.listName] = PromiseState.resolve(newValue);
+        newState[action.listName] = PromiseState.resolve(newValue);
+
+        return newState;
       }
 
       return state;
     case 'APPEND':
       if (state[action.name] && state[action.name].value) {
+        const newState = extend(true, {}, state);
         const done = [];
-        const newValue = state[action.name].value.concat(action.data).filter((note) => {
+        const newValue = newState[action.name].value.concat(action.data).filter((note) => {
           if (done.indexOf(note.id) === -1) {
             done.push(note.id);
 
@@ -38,31 +46,36 @@ const reducer = (state = {}, action) => {
           return false;
         });
 
-        state[action.name] = PromiseState.resolve(newValue, state[action.name].meta);
+        newState[action.name] = PromiseState.resolve(newValue, newState[action.name].meta);
+
+        return newState;
       }
 
       return state;
     case 'REFRESHING':
       if (state[action.name] && state[action.name].value) {
-        state[action.name] = PromiseState.refresh(state[action.name]);
+        const newState = extend(true, {}, state);
+        newState[action.name] = PromiseState.refresh(newState[action.name]);
+
+        return newState;
       }
 
       return state;
     case 'INCREASE_COUNT':
       if (state[action.name] && state[action.name].value && state[action.name].value[action.key]) {
-        const newState = extend(true, {}, state[action.name]);
-        newState[action.key].value++;
+        const newState = extend(true, {}, state);
+        newState[action.name].value[action.key]++;
 
-        state[action.name] = newState;
+        return newState;
       }
 
       return state;
     case 'DECREASE_COUNT':
       if (state[action.name] && state[action.name].value && state[action.name].value[action.key]) {
-        const newState = extend(true, {}, state[action.name]);
-        newState[action.key].value--;
+        const newState = extend(true, {}, state);
+        newState[action.name].value[action.key]--;
 
-        state[action.name] = newState;
+        return newState;
       }
 
       return state;
