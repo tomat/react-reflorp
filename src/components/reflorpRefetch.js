@@ -316,6 +316,15 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             then: (value) => {
               store.dispatch(append(hash, value));
 
+              value.forEach((item) => {
+                const itemHash = getName(entityName, item.id, parentId);
+                store.dispatch(update(itemHash, PromiseState.resolve(item)));
+
+                const draft = PromiseState.resolve(item);
+                draft.saved = true;
+                store.dispatch(updateDraft(itemHash, draft));
+              });
+
               return {
                 value,
               };
