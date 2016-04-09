@@ -3,6 +3,9 @@ React Reflorp
 
 Basically a simple ORM using [React Refetch](https://github.com/heroku/react-refetch) as a backend, but the data is stored in the [Redux](https://github.com/reactjs/redux) store.
 
+## Example project and demo
+An example project can be found [here](https://github.com/tomat/reflorp), and the latest build of it should be live at http://reflorp.com
+
 ## Installation
 
 Requires **React 0.14 or later.**
