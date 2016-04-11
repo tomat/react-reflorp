@@ -64,8 +64,6 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
       realMapStateToProps[key] = {
         url: getUrl(entityName, false, realMap),
         then: (value) => {
-          store.dispatch(update(hashedName, PromiseState.resolve(value)));
-
           value.forEach((item) => {
             const itemHash = getName(entityName, item.id, realMap);
             store.dispatch(update(itemHash, PromiseState.resolve(item)));
@@ -74,6 +72,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             draft.saved = true;
             store.dispatch(updateDraft(itemHash, draft));
           });
+
+          store.dispatch(update(hashedName, PromiseState.resolve(value)));
 
           return {
             value,
@@ -314,8 +314,6 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             force: true,
             refreshing: true,
             then: (value) => {
-              store.dispatch(append(hash, value));
-
               value.forEach((item) => {
                 const itemHash = getName(entityName, item.id, parentId);
                 store.dispatch(update(itemHash, PromiseState.resolve(item)));
@@ -324,6 +322,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
                 draft.saved = true;
                 store.dispatch(updateDraft(itemHash, draft));
               });
+
+              store.dispatch(append(hash, value));
 
               return {
                 value,
