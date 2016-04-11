@@ -42,6 +42,6 @@ export default class ReflorpWrapper extends Component {
   }
 
   render() {
-    return this.props.children;
+    return this.props.children ? this.props.children : null;
   }
 }
