@@ -12,4 +12,5 @@ export { refreshing as reflorpRefreshing } from './utils/reducer';
 export { increaseCount as reflorpIncreaseCount } from './utils/reducer';
 export { decreaseCount as reflorpDecreaseCount } from './utils/reducer';
 export { default as ReflorpWrapper } from './components/ReflorpWrapper';
+export { default as EntityWrapper } from './components/EntityWrapper';
 export { PromiseState } from 'react-refetch';
