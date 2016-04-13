@@ -1,23 +1,34 @@
 import { PromiseState } from 'react-refetch';
 import extend from 'extend';
 
+const prefix = 'reflorp/';
+
 const reducer = (state = {}, action) => {
   switch (action.type) {
-    case 'UPDATE':
-      const newState = extend(true, {}, state);
-      newState[action.name] = action.data;
-
-      return newState;
-    case 'UPDATE_DRAFT':
-      {
-        const newState = extend(true, {}, state);
-        newState[action.name + 'Draft'] = action.data;
+    case prefix + 'UPDATE':
+      if (typeof action.data !== 'undefined') {
+        const newState = extend(false, {}, state);
+        newState[action.name] = action.data;
 
         return newState;
       }
-    case 'UPDATE_LIST':
+
+      return state;
+    case prefix + 'UPDATE_MULTI':
+      if (typeof action.data !== 'undefined') {
+        const newState = extend(false, {}, state);
+        Object.keys(action.data).forEach((hash) => {
+          newState[hash] = action.data[hash];
+          console.log('multi', action.data[hash]);
+        });
+
+        return newState;
+      }
+
+      return state;
+    case prefix + 'UPDATE_LIST':
       if (state[action.listName] && state[action.listName].value) {
-        const newState = extend(true, {}, state);
+        const newState = extend(false, {}, state);
         const newValue = newState[action.listName].value.map((item) => {
           if (item.id === action.id) {
             return action.data;
@@ -32,7 +43,7 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
-    case 'APPEND':
+    case prefix + 'APPEND':
       if (state[action.name] && state[action.name].value) {
         const newState = extend(true, {}, state);
         const done = [];
@@ -52,7 +63,7 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
-    case 'REFRESHING':
+    case prefix + 'REFRESHING':
       if (state[action.name] && state[action.name].value) {
         const newState = extend(true, {}, state);
         newState[action.name] = PromiseState.refresh(newState[action.name]);
@@ -61,7 +72,7 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
-    case 'INCREASE_COUNT':
+    case prefix + 'INCREASE_COUNT':
       if (state[action.name] && state[action.name].value && state[action.name].value[action.key]) {
         const newState = extend(true, {}, state);
         newState[action.name].value[action.key]++;
@@ -70,7 +81,7 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
-    case 'DECREASE_COUNT':
+    case prefix + 'DECREASE_COUNT':
       if (state[action.name] && state[action.name].value && state[action.name].value[action.key]) {
         const newState = extend(true, {}, state);
         newState[action.name].value[action.key]--;
@@ -87,43 +98,42 @@ const reducer = (state = {}, action) => {
 export default reducer;
 
 export const update = (name, data) => ({
-  type: 'UPDATE',
-  name,
-  data,
-});
-
-export const updateDraft = (name, data) => ({
-  type: 'UPDATE_DRAFT',
+  type: prefix + 'UPDATE',
   name,
   data,
 });
 
 export const updateList = (id, listName, data) => ({
-  type: 'UPDATE_LIST',
+  type: prefix + 'UPDATE_LIST',
   id,
   listName,
   data,
 });
 
+export const updateMulti = (data) => ({
+  type: prefix + 'UPDATE_MULTI',
+  data,
+});
+
 export const append = (name, data) => ({
-  type: 'APPEND',
+  type: prefix + 'APPEND',
   name,
   data,
 });
 
 export const refreshing = (name) => ({
-  type: 'REFRESHING',
+  type: prefix + 'REFRESHING',
   name,
 });
 
 export const increaseCount = (name, key) => ({
-  type: 'INCREASE_COUNT',
+  type: prefix + 'INCREASE_COUNT',
   name,
   key,
 });
 
 export const decreaseCount = (name, key) => ({
-  type: 'DECREASE_COUNT',
+  type: prefix + 'DECREASE_COUNT',
   name,
   key,
 });

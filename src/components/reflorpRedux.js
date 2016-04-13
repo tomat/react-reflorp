@@ -1,26 +1,33 @@
 import { connect as connectRedux } from 'react-redux';
 import { getEntities } from './reflorpRefetch';
 import getName from '../utils/getName';
+import extend from 'extend';
 
 export default (mappings, ...restRedux) => {
-  const entities = getEntities();
-
   return connectRedux((state, props) => {
+    const entities = getEntities();
+    Object.keys(entities).forEach((entity) => {
+      if (entities[entity].plural && !entities[entity].singular) {
+        entities[entities[entity].plural] = extend(true, {}, entities[entity]);
+        entities[entities[entity].plural].singular = entity;
+      }
+    });
+
     const entityMappings = mappings(state, props);
     const ret = entityMappings;
 
     Object.keys(entityMappings).forEach((entity) => {
       let entityMapping = entityMappings[entity];
-      if (typeof entityMappings[entity] !== typeof {}) {
+      if (!entityMappings[entity] || typeof entityMappings[entity] !== typeof {}) {
         entityMapping = {
           id: entityMapping,
         };
       }
 
-      const id = entityMapping.id || entityMapping.parentId || 0;
+      const id = entityMapping.id || entityMapping.parentId || false;
       const parentId = entityMapping.parentId || false;
       const then = entityMapping.then || ((value) => value);
-      const pluralMatches = entity.match(/^(.+)s$/);
+      const pluralMatches = entity.match(/^((.+)s)$/);
       const createMatches = entity.match(/^(.+)Create$/);
       const createResponseMatches = entity.match(/^(.+)CreateResponse$/);
       const editMatches = entity.match(/^(.+)Edit$/);
@@ -34,17 +41,20 @@ export default (mappings, ...restRedux) => {
       if (entities[entity] && parentId && entityMapping.edit) {
         ret[entity] = state.reflorp[getName(entity, id, parentId) + 'Draft'];
       // Single entity belonging to parent
-      } else if (entities[entity] && parentId) {
+      } else if (entities[entity] && parentId && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id, parentId)];
       // Simple single entity in editing mode (receives draft)
       } else if (entities[entity] && entityMapping.edit) {
         ret[entity] = state.reflorp[getName(entity, id) + 'Draft'];
       // Simple single entity
-      } else if (entities[entity]) {
+      } else if (entities[entity] && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id)];
+      // List of entities
+      } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
+        ret[entity] = state.reflorp[getName(entities[pluralMatches[1]].singular, false, id)];
       // List of entities belonging to a parent
-      } else if (pluralMatches && entities[pluralMatches[1]]) {
-        ret[entity] = state.reflorp[getName(pluralMatches[1], false, id)];
+      } else if (pluralMatches && entities[pluralMatches[2]]) {
+        ret[entity] = state.reflorp[getName(pluralMatches[2], false, id)];
       // Function for creating an entity
       } else if (createMatches && entities[createMatches[1]]) {
         ret[entity] = state.reflorp[entity];

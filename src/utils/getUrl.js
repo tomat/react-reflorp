@@ -16,7 +16,11 @@ const getUrl = (entity, id = false, parentId = false, extra = {}, first = true) 
     url += '/';
   }
 
-  url += `${entity}s`;
+  if (entityConfiguration.plural) {
+    url += entityConfiguration.plural;
+  } else {
+    url += `${entity}s`;
+  }
 
   if (id) {
     url += `/${id}`;

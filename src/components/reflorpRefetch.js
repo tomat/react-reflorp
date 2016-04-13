@@ -1,7 +1,8 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { update, updateDraft, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
+import { update, updateMulti, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
+import extend from 'extend';
 
 let entities = {};
 let store = {};
@@ -16,6 +17,12 @@ export const getBaseUrl = () => baseUrl;
 
 export default (mapStateToProps) => connectRefetch((props, context) => {
   const realMapStateToProps = mapStateToProps(props, context);
+  Object.keys(entities).forEach((entity) => {
+    if (entities[entity].plural && !entities[entity].singular) {
+      entities[entities[entity].plural] = extend(true, {}, entities[entity]);
+      entities[entities[entity].plural].singular = entity;
+    }
+  });
 
   Object.keys(realMapStateToProps).forEach((key) => {
     let realMapConfig = realMapStateToProps[key];
@@ -24,18 +31,18 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
         id: realMapConfig,
       };
     }
-    const realMap = realMapConfig.id || realMapConfig.parentId;
+    const realMap = realMapConfig.id || realMapConfig.parentId || false;
 
-    const pluralMatches = key.match(/^(.+)s$/);
+    const pluralMatches = key.match(/^((.+)s)$/);
     const createMatches = key.match(/^(.+)Create$/);
     const editMatches = key.match(/^(.+)Edit/);
     const deleteMatches = key.match(/^(.+)Delete/);
     const loadMoreMatches = key.match(/^(.+)s?LoadMore$/);
 
-    if (entities[key]) {
+    if (entities[key] && !entities[key].singular) {
       const hashedName = getName(key, realMap);
       store.dispatch(update(hashedName, PromiseState.create()));
-      store.dispatch(updateDraft(hashedName, PromiseState.create()));
+      store.dispatch(update(`${hashedName}Draft`, PromiseState.create()));
       realMapStateToProps[key] = {
         url: getUrl(key, realMap),
         then: (value) => {
@@ -43,7 +50,39 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           const draft = PromiseState.resolve(value);
           draft.saved = true;
-          store.dispatch(updateDraft(hashedName, draft));
+          store.dispatch(update(`${hashedName}Draft`, draft));
+
+          return {
+            value,
+          };
+        },
+        catch: (reason, meta) => {
+          store.dispatch(update(hashedName, PromiseState.reject(meta.response.statusText)));
+
+          return {
+            value: null,
+          };
+        },
+      };
+    } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
+      const entityName = entities[pluralMatches[1]].singular;
+      const hashedName = getName(entityName, false, realMap);
+      store.dispatch(update(hashedName, PromiseState.create()));
+      realMapStateToProps[key] = {
+        url: getUrl(entityName, false, realMap),
+        then: (value) => {
+          const updates = {};
+          value.forEach((item) => {
+            const itemHash = getName(entityName, item.id, realMap);
+            updates[itemHash] = PromiseState.resolve(item);
+
+            const draft = PromiseState.resolve(item);
+            draft.saved = true;
+            updates[`${itemHash}Draft`] = draft;
+          });
+
+          store.dispatch(updateMulti(updates));
+          store.dispatch(update(hashedName, PromiseState.resolve(value)));
 
           return {
             value,
@@ -64,14 +103,17 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
       realMapStateToProps[key] = {
         url: getUrl(entityName, false, realMap),
         then: (value) => {
+          const updates = {};
           value.forEach((item) => {
             const itemHash = getName(entityName, item.id, realMap);
-            store.dispatch(update(itemHash, PromiseState.resolve(item)));
+            updates[itemHash] = PromiseState.resolve(item);
 
             const draft = PromiseState.resolve(item);
             draft.saved = true;
-            store.dispatch(updateDraft(itemHash, draft));
+            updates[`${itemHash}Draft`] = draft;
           });
+
+          store.dispatch(updateMulti(updates));
 
           store.dispatch(update(hashedName, PromiseState.resolve(value)));
 
@@ -119,7 +161,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               const draft = PromiseState.resolve(value);
               draft.saved = true;
-              store.dispatch(updateDraft(singleHash, draft));
+              store.dispatch(update(`${singleHash}Draft`, draft));
 
               store.dispatch(append(hash, value));
 
@@ -193,7 +235,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               const draft = PromiseState.resolve(value);
               draft.saved = true;
-              store.dispatch(updateDraft(hash, draft));
+              store.dispatch(update(`${hash}Draft`, draft));
 
               if (listHash) {
                 store.dispatch(updateList(id, listHash, value));
@@ -253,7 +295,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             then: (value) => {
               store.dispatch(update(`${hash}DeleteResponse`, PromiseState.resolve({})));
               store.dispatch(update(hash, PromiseState.resolve({})));
-              store.dispatch(updateDraft(hash, PromiseState.resolve({})));
+              store.dispatch(update(`${hash}Draft`, PromiseState.resolve({})));
 
               if (listHash) {
                 store.dispatch(updateList(id, listHash, false));
@@ -314,14 +356,17 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             force: true,
             refreshing: true,
             then: (value) => {
+              const updates = {};
               value.forEach((item) => {
                 const itemHash = getName(entityName, item.id, parentId);
-                store.dispatch(update(itemHash, PromiseState.resolve(item)));
+                updates[itemHash] = PromiseState.resolve(item);
 
                 const draft = PromiseState.resolve(item);
                 draft.saved = true;
-                store.dispatch(updateDraft(itemHash, draft));
+                updates[`${itemHash}Draft`] = draft;
               });
+
+              store.dispatch(updateMulti(updates));
 
               store.dispatch(append(hash, value));
 
