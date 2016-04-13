@@ -141,7 +141,7 @@ class EntityWrapper extends Component {
     const element = React.cloneElement(React.Children.only(children), childProps);
 
     return (
-      <div className={['reflorp-loader', (allResponses && allResponses.pending ? 'reflorp-loader-loading' : '')].join(' ')}>
+      <div className={[ 'reflorp-loader', (allResponses && allResponses.pending ? 'reflorp-loader-loading' : '') ].join(' ')}>
         {element}
       </div>
     );

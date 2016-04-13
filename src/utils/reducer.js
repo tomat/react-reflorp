@@ -19,7 +19,6 @@ const reducer = (state = {}, action) => {
         const newState = extend(false, {}, state);
         Object.keys(action.data).forEach((hash) => {
           newState[hash] = action.data[hash];
-          console.log('multi', action.data[hash]);
         });
 
         return newState;
