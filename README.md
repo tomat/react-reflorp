@@ -31,9 +31,12 @@ import { reflorpSetStore, reflorpSetEntities, reflorpSetBaseUrl } from 'react-re
 
 reflorpSetBaseUrl('/api');
 reflorpSetEntities({
-  board: {},
+  board: {
+    plural: 'boards'
+  },
   note: {
     parent: 'board',
+    plural: 'notes',
   },
 });
 reflorpSetStore(store);
