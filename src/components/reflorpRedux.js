@@ -31,14 +31,14 @@ export default (mappings, ...restRedux) => {
       const createMatches = entity.match(/^(.+)Create$/);
       const createResponseMatches = entity.match(/^(.+)CreateResponse$/);
       const editMatches = entity.match(/^(.+)Edit$/);
+      const editDraftMatches = entity.match(/^(.+)EditDraft$/);
       const editResponseMatches = entity.match(/^(.+)EditResponse$/);
       const deleteMatches = entity.match(/^(.+)Delete$/);
       const deleteResponseMatches = entity.match(/^(.+)DeleteResponse$/);
-      const loadMorePluralMatches = entity.match(/^(.+)sLoadMore$/);
       const loadMoreMatches = entity.match(/^(.+)LoadMore$/);
 
       // Single entity belonging to parent in editing mode (receives draft)
-      if (entities[entity] && parentId && entityMapping.edit) {
+      if (entities[entity] && parentId && entityMapping.edit && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id, parentId) + 'Draft'];
       // Single entity belonging to parent
       } else if (entities[entity] && parentId && entities[entity].plural !== entity) {
@@ -65,6 +65,9 @@ export default (mappings, ...restRedux) => {
       // Function for editing an entity
       } else if (editMatches && entities[editMatches[1]]) {
         ret[entity] = state.reflorp[`${editMatches[1]}Edit`].bind(null, id, parentId);
+      // Function for editing the draft of an entity
+      } else if (editDraftMatches && entities[editDraftMatches[1]]) {
+        ret[entity] = state.reflorp[`${editDraftMatches[1]}EditDraft`].bind(null, id, parentId);
       // Response to entity edit
       } else if (editResponseMatches && entities[editResponseMatches[1]]) {
         ret[entity] = state.reflorp[`${getName(editResponseMatches[1], id, parentId)}EditResponse`];
@@ -75,12 +78,22 @@ export default (mappings, ...restRedux) => {
       } else if (deleteResponseMatches && entities[deleteResponseMatches[1]]) {
         ret[entity] = state.reflorp[`${getName(deleteResponseMatches[1], id, parentId)}DeleteResponse`];
       // Function for loading next page of a list of entities
-      } else if (loadMorePluralMatches && entities[loadMorePluralMatches[1]]) {
-        const page = state.reflorp[`${getName(loadMorePluralMatches[1], false, id)}Page`] || 1;
-        ret[entity] = state.reflorp[`${loadMorePluralMatches[1]}LoadMore`].bind(null, false, id, { page: page + 1 });
-      } else if (loadMoreMatches && entities[loadMoreMatches[1]]) {
+      } else if (loadMoreMatches && !entities[loadMoreMatches[1]].singular) {
         const page = state.reflorp[`${getName(loadMoreMatches[1], false, id)}Page`] || 1;
-        ret[entity] = state.reflorp[`${loadMorePluralMatches[1]}LoadMore`].bind(null, false, entityMappings[entity], { page: page + 1 });
+        if (page === -1) {
+          ret[entity] = false;
+        } else {
+          ret[entity] = state.reflorp[`${loadMoreMatches[1]}LoadMore`].bind(null, false, id, { page: page + 1, ...entityMapping.extra });
+        }
+      // Function for loading next page of a list of entities
+      } else if (loadMoreMatches && entities[loadMoreMatches[1]].singular) {
+        const name = entities[loadMoreMatches[1]].singular;
+        const page = state.reflorp[`${getName(name, false, id)}Page`] || 1;
+        if (page === -1) {
+          ret[entity] = false;
+        } else {
+          ret[entity] = state.reflorp[`${name}LoadMore`].bind(null, false, id, { page: page + 1, ...entityMapping.extra });
+        }
       }
 
       if (ret[entity] && ret[entity].value) {

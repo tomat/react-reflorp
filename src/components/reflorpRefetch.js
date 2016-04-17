@@ -1,8 +1,9 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { update, updateMulti, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
+import { create, update, updateMulti, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 import extend from 'extend';
+import buildRequest from 'react-refetch/lib/utils/buildRequest';
 
 let entities = {};
 let store = {};
@@ -35,16 +36,24 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
     const pluralMatches = key.match(/^((.+)s)$/);
     const createMatches = key.match(/^(.+)Create$/);
-    const editMatches = key.match(/^(.+)Edit/);
+    const editMatches = key.match(/^(.+)Edit$/);
+    const editDraftMatches = key.match(/^(.+)EditDraft$/);
     const deleteMatches = key.match(/^(.+)Delete/);
-    const loadMoreMatches = key.match(/^(.+)s?LoadMore$/);
+    const loadMoreMatches = key.match(/^(.+)LoadMore$/);
 
     if (entities[key] && !entities[key].singular) {
       const hashedName = getName(key, realMap);
-      store.dispatch(update(hashedName, PromiseState.create()));
-      store.dispatch(update(`${hashedName}Draft`, PromiseState.create()));
+
+      const url = getUrl(key, realMap);
       realMapStateToProps[key] = {
-        url: getUrl(key, realMap),
+        url,
+        comparison: url,
+        buildRequest: (mapping) => {
+          store.dispatch(create(hashedName, PromiseState.create()));
+          store.dispatch(create(`${hashedName}Draft`, PromiseState.create()));
+
+          return buildRequest(mapping);
+        },
         then: (value) => {
           store.dispatch(update(hashedName, PromiseState.resolve(value)));
 
@@ -54,6 +63,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           return {
             value,
+            comparison: url,
+            force: true,
           };
         },
         catch: (reason, meta) => {
@@ -61,15 +72,24 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           return {
             value: null,
+            comparison: url,
+            force: true,
           };
         },
       };
     } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
       const entityName = entities[pluralMatches[1]].singular;
       const hashedName = getName(entityName, false, realMap);
-      store.dispatch(update(hashedName, PromiseState.create()));
+      const url = getUrl(entityName, false, realMap, realMapConfig.extra);
       realMapStateToProps[key] = {
-        url: getUrl(entityName, false, realMap),
+        url,
+        comparison: url,
+        buildRequest: (mapping) => {
+          store.dispatch(create(hashedName, PromiseState.create()));
+          store.dispatch(update(`${hashedName}Page`, 1));
+          
+          return buildRequest(mapping);
+        },
         then: (value) => {
           const updates = {};
           value.forEach((item) => {
@@ -86,6 +106,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           return {
             value,
+            force: true,
+            comparison: url,
           };
         },
         catch: (reason, meta) => {
@@ -93,15 +115,24 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           return {
             value: null,
+            force: true,
+            comparison: url,
           };
         },
       };
     } else if (pluralMatches && entities[pluralMatches[1]]) {
       const entityName = pluralMatches[1];
       const hashedName = getName(entityName, false, realMap);
-      store.dispatch(update(hashedName, PromiseState.create()));
+
+      const url = getUrl(entityName, false, realMap);
       realMapStateToProps[key] = {
-        url: getUrl(entityName, false, realMap),
+        url,
+        buildRequest: (mapping) => {
+          store.dispatch(create(hashedName, PromiseState.create()));
+          store.dispatch(update(`${hashedName}Page`, 1));
+
+          return buildRequest(mapping);
+        },
         then: (value) => {
           const updates = {};
           value.forEach((item) => {
@@ -119,6 +150,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           return {
             value,
+            comparison: url,
+            force: true,
           };
         },
         catch: (reason, meta) => {
@@ -126,6 +159,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           return {
             value: null,
+            comparison: url,
+            force: true,
           };
         },
       };
@@ -144,15 +179,19 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             hash = getName(entityName);
           }
 
-          store.dispatch(update(`${hash}CreateResponse`, PromiseState.create()));
-
           const ret = {};
 
           ret[`${hash}CreateResponse`] = {
             url,
+            comparison: url,
             method: 'POST',
             body: JSON.stringify(data),
             force: true,
+            buildRequest: (mapping) => {
+              store.dispatch(update(`${hash}CreateResponse`, PromiseState.create()));
+
+              return buildRequest(mapping);
+            },
             then: (value) => {
               store.dispatch(update(`${hash}CreateResponse`, PromiseState.resolve(value)));
 
@@ -172,6 +211,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               return {
                 value,
+                comparison: url,
+                force: true,
                 andThen: (newData) => {
                   if (entityConfiguration.onCreate) {
                     entityConfiguration.onCreate(newData);
@@ -188,6 +229,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               return {
                 value: null,
+                comparison: url,
+                force: true,
               };
             },
           };
@@ -222,13 +265,17 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             return ret;
           }
 
-          store.dispatch(update(`${hash}EditResponse`, PromiseState.create()));
-
           ret[`${hash}EditResponse`] = {
             url,
+            comparison: url,
             method: 'PATCH',
             body: JSON.stringify(data),
             force: true,
+            buildRequest: (mapping) => {
+              store.dispatch(update(`${hash}EditResponse`, PromiseState.create()));
+
+              return buildRequest(mapping);
+            },
             then: (value) => {
               store.dispatch(update(`${hash}EditResponse`, PromiseState.resolve(value)));
               store.dispatch(update(hash, PromiseState.resolve(value)));
@@ -243,6 +290,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               return {
                 value,
+                comparison: url,
+                force: true,
                 andThen: (newData) => {
                   if (entityConfiguration.onEdit) {
                     entityConfiguration.onEdit(newData);
@@ -259,11 +308,31 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               return {
                 value: null,
+                comparison: url,
+                force: true,
               };
             },
           };
 
           return ret;
+        };
+      }
+    } else if (editDraftMatches) {
+      const entityName = editDraftMatches[1];
+      const entityConfiguration = entities[entityName];
+      if (entityConfiguration) {
+        realMapStateToProps[key] = (id, parentId = false, data) => {
+          let hash;
+
+          if (entityConfiguration.parent && parentId) {
+            hash = getName(entityName, id, parentId);
+          } else {
+            hash = getName(entityName, id);
+          }
+
+          store.dispatch(update(`${hash}Draft`, PromiseState.resolve(data)));
+
+          return {};
         };
       }
     } else if (deleteMatches) {
@@ -286,20 +355,25 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           const ret = {};
 
-          store.dispatch(update(`${hash}DeleteResponse`, PromiseState.create()));
-
           ret[`${hash}DeleteResponse`] = {
             url,
+            comparison: url,
             method: 'DELETE',
             force: true,
-            then: (value) => {
-              store.dispatch(update(`${hash}DeleteResponse`, PromiseState.resolve({})));
-              store.dispatch(update(hash, PromiseState.resolve({})));
-              store.dispatch(update(`${hash}Draft`, PromiseState.resolve({})));
+            buildRequest: (mapping) => {
+              store.dispatch(update(`${hash}DeleteResponse`, PromiseState.create()));
 
+              return buildRequest(mapping);
+            },
+            then: (value) => {
               if (listHash) {
                 store.dispatch(updateList(id, listHash, false));
               }
+
+              store.dispatch(update(`${hash}DeleteResponse`, PromiseState.resolve(null)));
+
+              store.dispatch(update(hash, PromiseState.resolve(null)));
+              store.dispatch(update(`${hash}Draft`, PromiseState.resolve(null)));
 
               if (entityConfiguration.count) {
                 const parentHash = getName(entityConfiguration.parent, parentId);
@@ -308,6 +382,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               return {
                 value,
+                comparison: url,
+                force: true,
                 andThen: (newData) => {
                   if (entityConfiguration.onDelete) {
                     entityConfiguration.onDelete(newData);
@@ -323,6 +399,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
               })));
 
               return {
+                comparison: url,
+                force: true,
                 value: null,
               };
             },
@@ -331,7 +409,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           return ret;
         };
       }
-    } else if (loadMoreMatches) {
+    } else if (loadMoreMatches && !entities[loadMoreMatches[1]].singular) {
       const entityName = loadMoreMatches[1];
       const entityConfiguration = entities[entityName];
       if (entityConfiguration) {
@@ -346,15 +424,19 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             hash = getName(entityName, id);
           }
 
-          store.dispatch(refreshing(hash));
-          store.dispatch(update(`${hash}Page`, extra.page));
-
           const ret = {};
 
           ret[hash] = {
             url,
+            comparison: url,
             force: true,
             refreshing: true,
+            buildRequest: (mapping) => {
+              store.dispatch(refreshing(hash));
+              store.dispatch(update(`${hash}Page`, extra.page));
+
+              return buildRequest(mapping);
+            },
             then: (value) => {
               const updates = {};
               value.forEach((item) => {
@@ -366,12 +448,76 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
                 updates[`${itemHash}Draft`] = draft;
               });
 
+              if (value.length === 0) {
+                updates[`${hash}Page`] = -1;
+              }
+
               store.dispatch(updateMulti(updates));
 
               store.dispatch(append(hash, value));
 
               return {
                 value,
+                comparison: url,
+                force: true,
+              };
+            },
+          };
+
+          return ret;
+        };
+      }
+    } else if (loadMoreMatches && entities[loadMoreMatches[1]].singular) {
+      const entityName = entities[loadMoreMatches[1]].singular;
+      const entityConfiguration = entities[entityName];
+      if (entityConfiguration) {
+        realMapStateToProps[key] = (id, parentId = false, extra = { page: 1 }) => {
+          let url;
+          let hash;
+          if (entityConfiguration.parent && parentId) {
+            url = getUrl(entityName, id, parentId, extra);
+            hash = getName(entityName, id, parentId);
+          } else {
+            url = getUrl(entityName, id, false, extra);
+            hash = getName(entityName, id);
+          }
+
+          const ret = {};
+
+          ret[hash] = {
+            url,
+            comparison: url,
+            force: true,
+            refreshing: true,
+            buildRequest: (mapping) => {
+              store.dispatch(refreshing(hash));
+              store.dispatch(update(`${hash}Page`, extra.page));
+
+              return buildRequest(mapping);
+            },
+            then: (value) => {
+              const updates = {};
+              value.forEach((item) => {
+                const itemHash = getName(entityName, item.id, parentId);
+                updates[itemHash] = PromiseState.resolve(item);
+
+                const draft = PromiseState.resolve(item);
+                draft.saved = true;
+                updates[`${itemHash}Draft`] = draft;
+              });
+
+              if (value.length === 0) {
+                updates[`${hash}Page`] = -1;
+              }
+
+              store.dispatch(updateMulti(updates));
+
+              store.dispatch(append(hash, value));
+
+              return {
+                value,
+                comparison: url,
+                force: true,
               };
             },
           };

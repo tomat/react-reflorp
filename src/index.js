@@ -4,6 +4,7 @@ export { setEntities as reflorpSetEntities } from './components/reflorpRefetch';
 export { setBaseUrl as reflorpSetBaseUrl } from './components/reflorpRefetch';
 export { setStore as reflorpSetStore } from './components/reflorpRefetch';
 export { default as reflorpReducer } from './utils/reducer';
+export { create as reflorpCreate } from './utils/reducer';
 export { update as reflorpUpdate } from './utils/reducer';
 export { updateMulti as reflorpUpdateMulti } from './utils/reducer';
 export { updateList as reflorpUpdateList } from './utils/reducer';

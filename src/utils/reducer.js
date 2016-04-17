@@ -14,6 +14,22 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
+    case prefix + 'CREATE':
+      if (typeof action.data !== 'undefined') {
+        if (typeof state[action.name] === 'undefined') {
+          const newState = extend(false, {}, state);
+          newState[action.name] = action.data;
+
+          return newState;
+        } else {
+          const newState = extend(true, {}, state);
+          newState[action.name] = PromiseState.refresh(newState[action.name]);
+
+          return newState;
+        }
+      }
+
+      return state;
     case prefix + 'UPDATE_MULTI':
       if (typeof action.data !== 'undefined') {
         const newState = extend(false, {}, state);
@@ -46,9 +62,9 @@ const reducer = (state = {}, action) => {
       if (state[action.name] && state[action.name].value) {
         const newState = extend(true, {}, state);
         const done = [];
-        const newValue = newState[action.name].value.concat(action.data).filter((note) => {
-          if (done.indexOf(note.id) === -1) {
-            done.push(note.id);
+        const newValue = newState[action.name].value.concat(action.data).filter((item) => {
+          if (done.indexOf(item.id) === -1) {
+            done.push(item.id);
 
             return true;
           }
@@ -95,6 +111,12 @@ const reducer = (state = {}, action) => {
 };
 
 export default reducer;
+
+export const create = (name, data) => ({
+  type: prefix + 'CREATE',
+  name,
+  data,
+});
 
 export const update = (name, data) => ({
   type: prefix + 'UPDATE',
