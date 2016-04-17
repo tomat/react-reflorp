@@ -208,7 +208,7 @@ class EntityWrapper extends Component {
 
       if (name) {
         if (name.indexOf('.') !== -1) {
-          const [myEntity, field] = name.split('.');
+          const [ myEntity, field ] = name.split('.');
           const newData = { ...datas[myEntity] };
           newData[field] = value;
           editDrafts[myEntity](newData);
