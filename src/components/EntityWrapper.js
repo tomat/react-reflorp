@@ -38,8 +38,10 @@ import refetch from './reflorpRefetch';
     } else {
       mapping[entity] = { id: entityData.id, parentId: entityData.parentId };
     }
-    mapping[`${entity}LoadMore`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
-    mapping[`${entity}LoadMoreResponse`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
+    if (entityData.parentId && !entityData.id) {
+      mapping[`${entity}LoadMore`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
+      mapping[`${entity}LoadMoreResponse`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
+    }
   });
 
   return mapping;
