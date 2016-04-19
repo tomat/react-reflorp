@@ -32,19 +32,21 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
         id: realMapConfig,
       };
     }
-    const realMap = realMapConfig.id || realMapConfig.parentId || false;
+    const realId = realMapConfig.id || false;
+    const parentId = realMapConfig.parentId || false;
 
-    const pluralMatches = key.match(/^((.+)s)$/);
+    const pluralMatches = key.match(/^(.+)$/);
     const createMatches = key.match(/^(.+)Create$/);
     const editMatches = key.match(/^(.+)Edit$/);
     const editDraftMatches = key.match(/^(.+)EditDraft$/);
     const deleteMatches = key.match(/^(.+)Delete/);
     const loadMoreMatches = key.match(/^(.+)LoadMore$/);
 
+    // Single entity
     if (entities[key] && !entities[key].singular) {
-      const hashedName = getName(key, realMap);
+      const hashedName = getName(key, realId, parentId);
 
-      const url = getUrl(key, realMap);
+      const url = getUrl(key, realId, parentId);
       realMapStateToProps[key] = {
         url,
         comparison: url,
@@ -77,10 +79,12 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           };
         },
       };
+    // List of entities
     } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
       const entityName = entities[pluralMatches[1]].singular;
-      const hashedName = getName(entityName, false, realMap);
-      const url = getUrl(entityName, false, realMap, realMapConfig.extra);
+      const hashedName = getName(entityName, realId, parentId);
+
+      const url = getUrl(entityName, realId, parentId, realMapConfig.extra);
       realMapStateToProps[key] = {
         url,
         comparison: url,
@@ -93,7 +97,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
         then: (value) => {
           const updates = {};
           value.forEach((item) => {
-            const itemHash = getName(entityName, item.id, realMap);
+            const itemHash = getName(entityName, item.id, realId);
             updates[itemHash] = PromiseState.resolve(item);
 
             const draft = PromiseState.resolve(item);
@@ -120,50 +124,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           };
         },
       };
-    } else if (pluralMatches && entities[pluralMatches[1]]) {
-      const entityName = pluralMatches[1];
-      const hashedName = getName(entityName, false, realMap);
-
-      const url = getUrl(entityName, false, realMap);
-      realMapStateToProps[key] = {
-        url,
-        buildRequest: (mapping) => {
-          store.dispatch(create(hashedName, PromiseState.create()));
-          store.dispatch(update(`${hashedName}Page`, 1));
-
-          return buildRequest(mapping);
-        },
-        then: (value) => {
-          const updates = {};
-          value.forEach((item) => {
-            const itemHash = getName(entityName, item.id, realMap);
-            updates[itemHash] = PromiseState.resolve(item);
-
-            const draft = PromiseState.resolve(item);
-            draft.saved = true;
-            updates[`${itemHash}Draft`] = draft;
-          });
-
-          store.dispatch(updateMulti(updates));
-
-          store.dispatch(update(hashedName, PromiseState.resolve(value)));
-
-          return {
-            value,
-            comparison: url,
-            force: true,
-          };
-        },
-        catch: (reason, meta) => {
-          store.dispatch(update(hashedName, PromiseState.reject(meta.response.statusText)));
-
-          return {
-            value: null,
-            comparison: url,
-            force: true,
-          };
-        },
-      };
+    // Create entity
     } else if (createMatches) {
       const entityName = createMatches[1];
       const entityConfiguration = entities[entityName];
@@ -195,7 +156,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             then: (value) => {
               store.dispatch(update(`${hash}CreateResponse`, PromiseState.resolve(value)));
 
-              const singleHash = getName(entityName, value.id, (parentId ? parentId : false));
+              const singleHash = getName(entityName, value.id, parentId);
               store.dispatch(update(singleHash, PromiseState.resolve(value)));
 
               const draft = PromiseState.resolve(value);
@@ -238,6 +199,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           return ret;
         };
       }
+    // Edit entity
     } else if (editMatches) {
       const entityName = editMatches[1];
       const entityConfiguration = entities[entityName];
@@ -317,6 +279,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           return ret;
         };
       }
+    // Edit entity draft
     } else if (editDraftMatches) {
       const entityName = editDraftMatches[1];
       const entityConfiguration = entities[entityName];
@@ -335,6 +298,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           return {};
         };
       }
+    // Delete entity
     } else if (deleteMatches) {
       const entityName = deleteMatches[1];
       const entityConfiguration = entities[entityName];
@@ -409,66 +373,12 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           return ret;
         };
       }
-    } else if (loadMoreMatches && !entities[loadMoreMatches[1]].singular) {
-      const entityName = loadMoreMatches[1];
-      const entityConfiguration = entities[entityName];
-      if (entityConfiguration) {
-        realMapStateToProps[key] = (id, parentId = false, extra = { page: 1 }) => {
-          let url;
-          let hash;
-          if (entityConfiguration.parent && parentId) {
-            url = getUrl(entityName, id, parentId, extra);
-            hash = getName(entityName, id, parentId);
-          } else {
-            url = getUrl(entityName, id, false, extra);
-            hash = getName(entityName, id);
-          }
-
-          const ret = {};
-
-          ret[hash] = {
-            url,
-            comparison: url,
-            force: true,
-            refreshing: true,
-            buildRequest: (mapping) => {
-              store.dispatch(refreshing(hash));
-              store.dispatch(update(`${hash}Page`, extra.page));
-
-              return buildRequest(mapping);
-            },
-            then: (value) => {
-              const updates = {};
-              value.forEach((item) => {
-                const itemHash = getName(entityName, item.id, parentId);
-                updates[itemHash] = PromiseState.resolve(item);
-
-                const draft = PromiseState.resolve(item);
-                draft.saved = true;
-                updates[`${itemHash}Draft`] = draft;
-              });
-
-              if (value.length === 0) {
-                updates[`${hash}Page`] = -1;
-              }
-
-              store.dispatch(updateMulti(updates));
-
-              store.dispatch(append(hash, value));
-
-              return {
-                value,
-                comparison: url,
-                force: true,
-              };
-            },
-          };
-
-          return ret;
-        };
+    // Load more entities
+    } else if (loadMoreMatches) {
+      let entityName = loadMoreMatches[1];
+      if (entities[loadMoreMatches[1]].singular) {
+        entityName = entities[loadMoreMatches[1]].singular;
       }
-    } else if (loadMoreMatches && entities[loadMoreMatches[1]].singular) {
-      const entityName = entities[loadMoreMatches[1]].singular;
       const entityConfiguration = entities[entityName];
       if (entityConfiguration) {
         realMapStateToProps[key] = (id, parentId = false, extra = { page: 1 }) => {

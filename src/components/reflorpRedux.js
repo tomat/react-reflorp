@@ -24,10 +24,10 @@ export default (mappings, ...restRedux) => {
         };
       }
 
-      const id = entityMapping.id || entityMapping.parentId || false;
+      const id = entityMapping.id || false;
       const parentId = entityMapping.parentId || false;
       const then = entityMapping.then || ((value) => value);
-      const pluralMatches = entity.match(/^((.+)s)$/);
+      const pluralMatches = entity.match(/^(.+)$/);
       const createMatches = entity.match(/^(.+)Create$/);
       const createResponseMatches = entity.match(/^(.+)CreateResponse$/);
       const editMatches = entity.match(/^(.+)Edit$/);
@@ -44,23 +44,19 @@ export default (mappings, ...restRedux) => {
       } else if (entities[entity] && parentId && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id, parentId)];
       // Simple single entity in editing mode (receives draft)
-      } else if (entities[entity] && entityMapping.edit) {
+      } else if (entities[entity] && entityMapping.edit && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id) + 'Draft'];
       // Simple single entity
       } else if (entities[entity] && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id)];
       // List of entities
       } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
-        ret[entity] = state.reflorp[getName(entities[pluralMatches[1]].singular, false, id)];
-      // List of entities belonging to a parent
-      } else if (pluralMatches && entities[pluralMatches[2]]) {
-        ret[entity] = state.reflorp[getName(pluralMatches[2], false, id)];
+        ret[entity] = state.reflorp[getName(entities[pluralMatches[1]].singular, id, parentId)];
       // Function for creating an entity
       } else if (createMatches && entities[createMatches[1]]) {
         ret[entity] = state.reflorp[entity];
       // Response to entity creation
       } else if (createResponseMatches && entities[createResponseMatches[1]]) {
-        const parentId = id === 0 ? false : id;
         ret[entity] = state.reflorp[`${getName(createResponseMatches[1], false, parentId)}CreateResponse`];
       // Function for editing an entity
       } else if (editMatches && entities[editMatches[1]]) {
@@ -78,26 +74,24 @@ export default (mappings, ...restRedux) => {
       } else if (deleteResponseMatches && entities[deleteResponseMatches[1]]) {
         ret[entity] = state.reflorp[`${getName(deleteResponseMatches[1], id, parentId)}DeleteResponse`];
       // Function for loading next page of a list of entities
-      } else if (loadMoreMatches && !entities[loadMoreMatches[1]].singular) {
-        const page = state.reflorp[`${getName(loadMoreMatches[1], false, id)}Page`] || 1;
-        if (page === -1) {
-          ret[entity] = false;
-        } else {
-          ret[entity] = state.reflorp[`${loadMoreMatches[1]}LoadMore`].bind(null, false, id, { page: page + 1, ...entityMapping.extra });
+      } else if (loadMoreMatches) {
+        let name = loadMoreMatches[1];
+        if (entities[loadMoreMatches[1]].singular) {
+          name = entities[loadMoreMatches[1]].singular;
         }
-      // Function for loading next page of a list of entities
-      } else if (loadMoreMatches && entities[loadMoreMatches[1]].singular) {
-        const name = entities[loadMoreMatches[1]].singular;
-        const page = state.reflorp[`${getName(name, false, id)}Page`] || 1;
+        const page = state.reflorp[`${getName(name, false, parentId)}Page`] || 1;
         if (page === -1) {
           ret[entity] = false;
         } else {
-          ret[entity] = state.reflorp[`${name}LoadMore`].bind(null, false, id, { page: page + 1, ...entityMapping.extra });
+          ret[entity] = state.reflorp[`${name}LoadMore`].bind(null, false, parentId, { page: page + 1, ...entityMapping.extra });
         }
       }
 
       if (ret[entity] && ret[entity].value) {
         ret[entity].value = then(ret[entity].value);
+      }
+      if (ret[entity] && ret[entity].value && entities[entity].then) {
+        ret[entity].value = entities[entity].then(ret[entity].value);
       }
     });
 
