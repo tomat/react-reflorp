@@ -1,4 +1,5 @@
 import { connect as connectRedux } from 'react-redux';
+import { PromiseState } from 'react-refetch';
 import { getEntities } from './reflorpRefetch';
 import getName from '../utils/getName';
 import extend from 'extend';
@@ -24,11 +25,12 @@ export default (mappings, ...restRedux) => {
         };
       }
 
-      const id = entityMapping.id || false;
+      const id = (typeof entityMapping.id === 'undefined' ? false : entityMapping.id);
       const parentId = entityMapping.parentId || false;
       const then = entityMapping.then || ((value) => value);
       const pluralMatches = entity.match(/^(.+)$/);
       const createMatches = entity.match(/^(.+)Create$/);
+      const originalMatches = entity.match(/^(.+)Original$/);
       const createResponseMatches = entity.match(/^(.+)CreateResponse$/);
       const editMatches = entity.match(/^(.+)Edit$/);
       const editDraftMatches = entity.match(/^(.+)EditDraft$/);
@@ -40,12 +42,28 @@ export default (mappings, ...restRedux) => {
       // Single entity belonging to parent in editing mode (receives draft)
       if (entities[entity] && parentId && entityMapping.edit && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id, parentId) + 'Draft'];
+
+        // If id is 0 we are creating a new entity, so use default data as a fallback
+        if (id == 0 && !ret[entity] && entities[entity]) {
+          ret[entity] = PromiseState.resolve(entities[entity].defaults || { id: 0 });
+        }
+      // Single original entity belonging to parent
+      } else if (originalMatches && entities[originalMatches[1]] && parentId) {
+        ret[entity] = state.reflorp[getName(originalMatches[1], id, parentId)];
       // Single entity belonging to parent
       } else if (entities[entity] && parentId && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id, parentId)];
       // Simple single entity in editing mode (receives draft)
       } else if (entities[entity] && entityMapping.edit && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id) + 'Draft'];
+
+        // If id is 0 we are creating a new entity, so use default data as a fallback
+        if (id == 0 && !ret[entity] && entities[entity]) {
+          ret[entity] = PromiseState.resolve(entities[entity].defaults || { id: 0 });
+        }
+      // Simple single original entity
+      } else if (originalMatches && entities[originalMatches[1]] && entities[originalMatches[1]].plural !== originalMatches[1]) {
+        ret[entity] = state.reflorp[getName(originalMatches[1], id)];
       // Simple single entity
       } else if (entities[entity] && entities[entity].plural !== entity) {
         ret[entity] = state.reflorp[getName(entity, id)];
@@ -60,7 +78,11 @@ export default (mappings, ...restRedux) => {
         ret[entity] = state.reflorp[`${getName(createResponseMatches[1], false, parentId)}CreateResponse`];
       // Function for editing an entity
       } else if (editMatches && entities[editMatches[1]]) {
-        ret[entity] = state.reflorp[`${editMatches[1]}Edit`].bind(null, id, parentId);
+        if (id == 0) {
+          ret[entity] = (data) => state.reflorp[`${editMatches[1]}Create`](data, parentId);
+        } else {
+          ret[entity] = state.reflorp[`${editMatches[1]}Edit`].bind(null, id, parentId);
+        }
       // Function for editing the draft of an entity
       } else if (editDraftMatches && entities[editDraftMatches[1]]) {
         ret[entity] = state.reflorp[`${editDraftMatches[1]}EditDraft`].bind(null, id, parentId);
@@ -90,7 +112,7 @@ export default (mappings, ...restRedux) => {
       if (ret[entity] && ret[entity].value) {
         ret[entity].value = then(ret[entity].value);
       }
-      if (ret[entity] && ret[entity].value && entities[entity].then) {
+      if (ret[entity] && ret[entity].value && entities[entity] && entities[entity].then) {
         ret[entity].value = entities[entity].then(ret[entity].value);
       }
     });
