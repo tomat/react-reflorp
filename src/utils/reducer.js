@@ -5,6 +5,8 @@ const prefix = 'reflorp/';
 
 const reducer = (state = {}, action) => {
   switch (action.type) {
+    case prefix + 'RESET':
+      return {};
     case prefix + 'UPDATE':
       if (typeof action.data !== 'undefined') {
         const newState = extend(false, {}, state);
@@ -27,6 +29,15 @@ const reducer = (state = {}, action) => {
 
           return newState;
         }
+      }
+
+      return state;
+    case prefix + 'REMOVE':
+      if (typeof state[action.name] !== 'undefined') {
+        const newState = extend(false, {}, state);
+        delete newState[action.name];
+
+        return newState;
       }
 
       return state;
@@ -59,7 +70,7 @@ const reducer = (state = {}, action) => {
 
       return state;
     case prefix + 'APPEND':
-      if (state[action.name] && state[action.name].value) {
+      if (state[action.name] && state[action.name].value && state[action.name].value.concat) {
         const newState = extend(true, {}, state);
         const done = [];
         const newValue = newState[action.name].value.concat(action.data).filter((item) => {
@@ -118,6 +129,11 @@ export const create = (name, data) => ({
   data,
 });
 
+export const remove = (name) => ({
+  type: prefix + 'REMOVE',
+  name,
+});
+
 export const update = (name, data) => ({
   type: prefix + 'UPDATE',
   name,
@@ -157,4 +173,8 @@ export const decreaseCount = (name, key) => ({
   type: prefix + 'DECREASE_COUNT',
   name,
   key,
+});
+
+export const reset = () => ({
+  type: prefix + 'RESET',
 });
