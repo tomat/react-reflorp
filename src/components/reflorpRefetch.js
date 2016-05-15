@@ -1,5 +1,5 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { create, update, updateMulti, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
+import { remove, create, update, updateMulti, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 import extend from 'extend';
@@ -97,7 +97,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
         then: (value) => {
           const updates = {};
           value.forEach((item) => {
-            const itemHash = getName(entityName, item.id, realId);
+            const itemHash = getName(entityName, item.id, parentId);
             updates[itemHash] = PromiseState.resolve(item);
 
             const draft = PromiseState.resolve(item);
@@ -142,6 +142,13 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
           const ret = {};
 
+          // Reset errors if called with data = false
+          if (data === false) {
+            store.dispatch(update(`${hash}CreateResponse`, null));
+
+            return ret;
+          }
+
           ret[`${hash}CreateResponse`] = {
             url,
             comparison: url,
@@ -168,6 +175,13 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
               if (entityConfiguration.count) {
                 const parentHash = getName(entityConfiguration.parent, parentId);
                 store.dispatch(increaseCount(parentHash, entityConfiguration.count));
+              }
+
+              // There may be a draft here with id = 0, so remove it
+              if (parentId) {
+                store.dispatch(remove(`${getName(entityName, '0', parentId)}Draft`));
+              } else {
+                store.dispatch(remove(`${getName(entityName, '0')}Draft`));
               }
 
               return {
@@ -293,7 +307,9 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             hash = getName(entityName, id);
           }
 
-          store.dispatch(update(`${hash}Draft`, PromiseState.resolve(data)));
+          const draft = PromiseState.resolve(data);
+          draft.saved = false;
+          store.dispatch(update(`${hash}Draft`, draft));
 
           return {};
         };
