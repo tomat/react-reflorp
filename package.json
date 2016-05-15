@@ -55,10 +55,10 @@
     "react-addons-test-utils": "^0.14.0",
     "react-dom": "0.14.8",
     "react-redux": "4.4.1",
-    "react-refetch": "1.0.0-beta.0",
+    "react-refetch": "1.0.0-beta.4",
     "redux": "3.3.1",
     "rimraf": "^2.3.4",
-    "webpack": "2.1.0-beta.4"
+    "webpack": "2.1.0-beta.7"
   },
   "dependencies": {
     "hoist-non-react-statics": "^1.0.3",
