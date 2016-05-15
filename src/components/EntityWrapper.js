@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { PromiseState } from 'react-refetch';
 import redux from './reflorpRedux';
 import refetch from './reflorpRefetch';
+import debounce from '../utils/debounce.js';
 
 @refetch((props) => {
   const mapping = {};
@@ -23,13 +24,21 @@ import refetch from './reflorpRefetch';
   const mapping = {};
   const entityList = props.entities || {};
   if (props.entity) {
-    entityList[props.entity] = { id: props.id, parentId: props.parentId };
+    entityList[props.entity] = { id: props.id, parentId: props.parentId, edit: props.edit, create: props.create };
   }
 
   Object.keys(entityList).forEach((entity) => {
     const entityData = entityList[entity];
+
+    if (entityData.create) {
+      entityData.id = '0';
+    }
+
     if (entityData.edit !== false) {
       mapping[entity] = { id: entityData.id, parentId: entityData.parentId, edit: true };
+      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId };
+      mapping[`${entity}Create`] = true;
+      mapping[`${entity}CreateResponse`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}Edit`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}EditDraft`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}EditResponse`] = { id: entityData.id, parentId: entityData.parentId };
@@ -37,6 +46,7 @@ import refetch from './reflorpRefetch';
       mapping[`${entity}DeleteResponse`] = { id: entityData.id, parentId: entityData.parentId };
     } else {
       mapping[entity] = { id: entityData.id, parentId: entityData.parentId };
+      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId };
     }
     if (entityData.parentId && !entityData.id) {
       mapping[`${entity}LoadMore`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
@@ -50,25 +60,32 @@ class EntityWrapper extends Component {
   static propTypes = {
     onEdit: PropTypes.func,
     onDelete: PropTypes.func,
+    onCreate: PropTypes.func,
     children: PropTypes.node,
     parentId: PropTypes.any,
     id: PropTypes.any,
     entity: PropTypes.string,
     entities: PropTypes.object,
+    hideUntilLoaded: PropTypes.bool,
+  };
+
+  static defaultProps = {
+    hideUntilLoaded: false,
   };
 
   constructor() {
     super();
 
     this.state = {
-      edited: false,
-      deleted: false,
+      created: {},
+      edited: {},
+      deleted: {},
     };
   }
 
   componentWillReceiveProps(nextProps) {
-    const { onEdit, onDelete, entity, entities, id, parentId } = nextProps;
-    const { edited, deleted } = this.state;
+    const { onCreate, onEdit, onDelete, entity, entities, id, parentId } = nextProps;
+    const { edited, deleted, created } = this.state;
 
     const entityList = entities || {};
     if (entity) {
@@ -76,33 +93,63 @@ class EntityWrapper extends Component {
     }
 
     Object.keys(entityList).forEach((entityKey) => {
+      const createResponse = nextProps[`${entityKey}CreateResponse`];
       const editResponse = nextProps[`${entityKey}EditResponse`];
       const deleteResponse = nextProps[`${entityKey}DeleteResponse`];
 
-      if (editResponse) {
-        if (editResponse.fulfilled) {
-          if (onEdit && !edited) {
+      if (createResponse) {
+        if (createResponse.fulfilled) {
+          if (onCreate && !created[entityKey]) {
+            const newCreated = { ...created };
+            const value = createResponse.value;
+            newCreated[entityKey] = true;
             this.setState({
-              edited: true,
-            }, onEdit);
+              created: newCreated,
+            }, () => onCreate(value));
           }
         } else {
+          const newCreated = { ...created };
+          delete newCreated[entityKey];
           this.setState({
-            edited: false,
+            created: newCreated,
+          });
+        }
+      }
+
+      if (editResponse) {
+        if (editResponse.fulfilled) {
+          if (onEdit && !edited[entityKey]) {
+            const newEdited = { ...edited };
+            const value = editResponse.value;
+            newEdited[entityKey] = true;
+            this.setState({
+              edited: newEdited,
+            }, () => onEdit(value));
+          }
+        } else {
+          const newEdited = { ...edited };
+          delete newEdited[entityKey];
+          this.setState({
+            edited: newEdited,
           });
         }
       }
 
       if (deleteResponse) {
         if (deleteResponse.fulfilled) {
-          if (onDelete && !deleted) {
+          if (onDelete && !deleted[entityKey]) {
+            const newDeleted = { ...deleted };
+            const value = entityList[entityKey];
+            newDeleted[entityKey] = true;
             this.setState({
-              deleted: true,
-            }, onDelete);
+              deleted: newDeleted,
+            }, () => onDelete(value));
           }
         } else {
+          const newDeleted = { ...deleted };
+          delete newDeleted[entityKey];
           this.setState({
-            deleted: false,
+            deleted: newDeleted,
           });
         }
       }
@@ -110,7 +157,7 @@ class EntityWrapper extends Component {
   }
 
   render() {
-    const { children, entity, entities, id, parentId, className } = this.props;
+    const { children, entity, entities, id, parentId, className, hideUntilLoaded } = this.props;
 
     const entityList = entities || {};
     if (entity) {
@@ -118,6 +165,7 @@ class EntityWrapper extends Component {
     }
 
     const datas = {};
+    const saved = {};
     const loadMores = {};
     const loadMoreResponses = {};
     const edits = {};
@@ -125,15 +173,18 @@ class EntityWrapper extends Component {
     const deletes = {};
     const responses = [];
     const dataResponses = [];
+    const createResponses = [];
     const deleteResponses = [];
     const editResponses = [];
     Object.keys(entityList).forEach((entityKey) => {
+      const createResponse = this.props[`${entityKey}CreateResponse`];
       const editResponse = this.props[`${entityKey}EditResponse`];
       const deleteResponse = this.props[`${entityKey}DeleteResponse`];
       const data = this.props[entityKey];
 
       if (data) {
         datas[entityKey] = data.value;
+        saved[entityKey] = data.saved;
         responses.push(data);
         dataResponses.push(data);
       }
@@ -147,9 +198,16 @@ class EntityWrapper extends Component {
         }
       }
       if (this.props[`${entityKey}Edit`]) {
+        if (this.props[`${entityKey}Original`]) {
+          datas[`${entityKey}Original`] = this.props[`${entityKey}Original`].value;
+        }
         edits[entityKey] = this.props[`${entityKey}Edit`];
         editDrafts[entityKey] = this.props[`${entityKey}EditDraft`];
         deletes[entityKey] = this.props[`${entityKey}Delete`];
+      }
+      if (createResponse) {
+        createResponses.push(createResponse);
+        responses.push(createResponse);
       }
       if (editResponse) {
         editResponses.push(editResponse);
@@ -171,8 +229,9 @@ class EntityWrapper extends Component {
 
     const childProps = {
       data: (entity ? datas[entity] : datas),
+      saved: (entity ? saved[entity] : saved),
       error,
-      loading: (allResponses && allResponses.pending ? true : false),
+      loading: (allResponses && (allResponses.pending || allResponses.refreshing) ? true : false),
       hasData: (dataResponsesPs && dataResponsesPs.fulfilled ? true : false),
     };
 
@@ -222,11 +281,21 @@ class EntityWrapper extends Component {
       }
     };
 
-    const element = React.cloneElement(React.Children.only(children), childProps);
+    childProps.handleChangeDebounced = (wait = 50) => {
+      const debouncedChange = debounce(childProps.handleChange, wait);
+
+      return (e) => {
+        if (e.persist) {
+          e.persist();
+        }
+
+        debouncedChange(e);
+      }
+    };
 
     return (
       <div className={[ (className ? className : ''), 'reflorp-loader', (allResponses && (allResponses.pending || allResponses.refreshing) ? 'reflorp-loader-loading' : '') ].join(' ')}>
-        {element}
+        {(childProps.hasData || !hideUntilLoaded ? React.cloneElement(React.Children.only(children), childProps) : <noscript />)}
       </div>
     );
   }
