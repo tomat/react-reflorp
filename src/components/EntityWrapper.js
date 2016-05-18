@@ -24,7 +24,7 @@ import debounce from '../utils/debounce.js';
   const mapping = {};
   const entityList = props.entities || {};
   if (props.entity) {
-    entityList[props.entity] = { id: props.id, parentId: props.parentId, edit: props.edit, create: props.create };
+    entityList[props.entity] = { id: props.id, parentId: props.parentId, edit: props.edit, create: props.create, extra: props.extra };
   }
 
   Object.keys(entityList).forEach((entity) => {
@@ -35,8 +35,8 @@ import debounce from '../utils/debounce.js';
     }
 
     if (entityData.edit !== false) {
-      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, edit: true };
-      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId };
+      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, edit: true, extra: entityData.extra };
+      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
       mapping[`${entity}Create`] = true;
       mapping[`${entity}CreateResponse`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}Edit`] = { id: entityData.id, parentId: entityData.parentId };
@@ -45,8 +45,8 @@ import debounce from '../utils/debounce.js';
       mapping[`${entity}Delete`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}DeleteResponse`] = { id: entityData.id, parentId: entityData.parentId };
     } else {
-      mapping[entity] = { id: entityData.id, parentId: entityData.parentId };
-      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId };
+      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra };
+      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra };
     }
     if (entityData.parentId && !entityData.id) {
       mapping[`${entity}LoadMore`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };

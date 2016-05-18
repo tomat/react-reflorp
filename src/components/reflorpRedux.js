@@ -28,6 +28,7 @@ export default (mappings, ...restRedux) => {
       const id = (typeof entityMapping.id === 'undefined' ? false : entityMapping.id);
       const parentId = entityMapping.parentId || false;
       const then = entityMapping.then || ((value) => value);
+      const extra = entityMapping.extra || {};
       const pluralMatches = entity.match(/^(.+)$/);
       const createMatches = entity.match(/^(.+)Create$/);
       const originalMatches = entity.match(/^(.+)Original$/);
@@ -69,7 +70,9 @@ export default (mappings, ...restRedux) => {
         ret[entity] = state.reflorp[getName(entity, id)];
       // List of entities
       } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
-        ret[entity] = state.reflorp[getName(entities[pluralMatches[1]].singular, id, parentId)];
+        const injectHash = getName(entities[pluralMatches[1]].singular, id, parentId, extra);
+        console.log('injecting ' + injectHash, entities[pluralMatches[1]].singular, id, parentId, extra);
+        ret[entity] = state.reflorp[injectHash];
       // Function for creating an entity
       } else if (createMatches && entities[createMatches[1]]) {
         ret[entity] = state.reflorp[entity];
@@ -101,11 +104,11 @@ export default (mappings, ...restRedux) => {
         if (entities[loadMoreMatches[1]].singular) {
           name = entities[loadMoreMatches[1]].singular;
         }
-        const page = state.reflorp[`${getName(name, false, parentId)}Page`] || 1;
+        const page = state.reflorp[`${getName(name, false, parentId, extra)}Page`] || 1;
         if (page === -1) {
           ret[entity] = false;
         } else {
-          ret[entity] = state.reflorp[`${name}LoadMore`].bind(null, false, parentId, { page: page + 1, ...entityMapping.extra });
+          ret[entity] = state.reflorp[`${name}LoadMore`].bind(null, false, parentId, { page: page + 1, ...extra });
         }
       }
 

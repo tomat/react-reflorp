@@ -1,5 +1,5 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { remove, create, update, updateMulti, updateList, append, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
+import { remove, create, update, updateMulti, updateAllLists, appendAllLists, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 import extend from 'extend';
@@ -34,6 +34,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
     }
     const realId = realMapConfig.id || false;
     const parentId = realMapConfig.parentId || false;
+    const extra = realMapConfig.extra || {};
 
     const pluralMatches = key.match(/^(.+)$/);
     const createMatches = key.match(/^(.+)Create$/);
@@ -82,15 +83,18 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
     // List of entities
     } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
       const entityName = entities[pluralMatches[1]].singular;
-      const hashedName = getName(entityName, realId, parentId);
+      const hashedName = getName(entityName, realId, parentId, extra);
 
-      const url = getUrl(entityName, realId, parentId, realMapConfig.extra);
+      console.log('refetch ' + hashedName, entityName, realId, parentId, extra);
+
+      const url = getUrl(entityName, realId, parentId, extra);
       realMapStateToProps[key] = {
         url,
         comparison: url,
         buildRequest: (mapping) => {
           store.dispatch(create(hashedName, PromiseState.create()));
           store.dispatch(update(`${hashedName}Page`, 1));
+          store.dispatch(update(`${hashedName}Extra`, extra));
           
           return buildRequest(mapping);
         },
@@ -170,7 +174,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
               draft.saved = true;
               store.dispatch(update(`${singleHash}Draft`, draft));
 
-              store.dispatch(append(hash, value));
+              store.dispatch(appendAllLists(entityName, parentId, [value]));
 
               if (entityConfiguration.count) {
                 const parentHash = getName(entityConfiguration.parent, parentId);
@@ -261,7 +265,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
               store.dispatch(update(`${hash}Draft`, draft));
 
               if (listHash) {
-                store.dispatch(updateList(id, listHash, value));
+                store.dispatch(updateAllLists(entityName, id, parentId, value));
               }
 
               return {
@@ -347,7 +351,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
             },
             then: (value) => {
               if (listHash) {
-                store.dispatch(updateList(id, listHash, false));
+                store.dispatch(updateAllLists(entityName, id, parentId, false));
               }
 
               store.dispatch(update(`${hash}DeleteResponse`, PromiseState.resolve(null)));
@@ -392,8 +396,8 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
     // Load more entities
     } else if (loadMoreMatches) {
       let entityName = loadMoreMatches[1];
-      if (entities[loadMoreMatches[1]].singular) {
-        entityName = entities[loadMoreMatches[1]].singular;
+      if (entities[entityName] && entities[entityName].singular) {
+        entityName = entities[entityName].singular;
       }
       const entityConfiguration = entities[entityName];
       if (entityConfiguration) {
@@ -438,7 +442,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
 
               store.dispatch(updateMulti(updates));
 
-              store.dispatch(append(hash, value));
+              store.dispatch(appendAllLists(entityName, parentId, value));
 
               return {
                 value,

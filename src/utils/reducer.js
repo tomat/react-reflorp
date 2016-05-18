@@ -52,40 +52,69 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
-    case prefix + 'UPDATE_LIST':
-      if (state[action.listName] && state[action.listName].value) {
+    case prefix + 'UPDATE_ALL_LISTS':
+      if (typeof action.data !== 'undefined') {
         const newState = extend(false, {}, state);
-        const newValue = newState[action.listName].value.map((item) => {
-          if (item.id === action.id) {
-            return action.data;
+        const { entityName, id, parentId, data } = action;
+
+        Object.keys(state).forEach((hash) => {
+          if (newState[hash].value && newState[hash].value.map) {
+            const parentMatch = (parentId && hash.match(new RegExp('^' + entityName + '\-list\-' + parentId + '\-')));
+            const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
+
+            if (parentMatch || regularMatch) {
+              const newValue = newState[hash].value.map((item) => {
+                if (item.id === id) {
+                  return data;
+                }
+
+                return item;
+              }).filter((item) => item !== false);
+
+              newState[hash] = PromiseState.resolve(newValue);
+            }
           }
-
-          return item;
-        }).filter((item) => item !== false);
-
-        newState[action.listName] = PromiseState.resolve(newValue);
+        });
 
         return newState;
       }
 
       return state;
-    case prefix + 'APPEND':
-      if (state[action.name] && state[action.name].value && state[action.name].value.concat) {
-        const newState = extend(true, {}, state);
-        const done = [];
-        const newValue = newState[action.name].value.concat(action.data).filter((item) => {
-          if (done.indexOf(item.id) === -1) {
-            done.push(item.id);
+    case prefix + 'APPEND_ALL_LISTS':
+      if (typeof action.data !== 'undefined') {
+        const newState = extend(false, {}, state);
+        const { entityName, parentId, data } = action;
 
-            return true;
+        Object.keys(state).forEach((hash) => {
+          if (newState[hash].value && newState[hash].value.map) {
+            const parentMatch = (parentId && hash.match(new RegExp('^' + entityName + '\-list\-' + parentId + '\-')));
+            const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
+
+            if (parentMatch || regularMatch) {
+              const extra = newState[`${hash}Extra`];
+              const done = [];
+              const newValue = newState[hash].value.concat(data).filter((item) => {
+                if (done.indexOf(item.id) === -1) {
+                  let match = true;
+                  Object.keys(extra).forEach((e) => {
+                    if (extra[e] != item[e]) {
+                      match = false;
+                    }
+                  });
+                  if (match) {
+                    done.push(item.id);
+
+                    return true;
+                  }
+                }
+
+                return false;
+              });
+
+              newState[hash] = PromiseState.resolve(newValue, newState[hash].meta);
+            }
           }
-
-          return false;
         });
-
-        newState[action.name] = PromiseState.resolve(newValue, newState[action.name].meta);
-
-        return newState;
       }
 
       return state;
@@ -140,10 +169,11 @@ export const update = (name, data) => ({
   data,
 });
 
-export const updateList = (id, listName, data) => ({
-  type: prefix + 'UPDATE_LIST',
+export const updateAllLists = (entityName, id, parentId, data) => ({
+  type: prefix + 'UPDATE_ALL_LISTS',
+  entityName,
   id,
-  listName,
+  parentId,
   data,
 });
 
@@ -152,9 +182,10 @@ export const updateMulti = (data) => ({
   data,
 });
 
-export const append = (name, data) => ({
-  type: prefix + 'APPEND',
-  name,
+export const appendAllLists = (entityName, parentId, data) => ({
+  type: prefix + 'APPEND_ALL_LISTS',
+  entityName,
+  parentId,
   data,
 });
 
