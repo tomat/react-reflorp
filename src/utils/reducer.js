@@ -63,15 +63,27 @@ const reducer = (state = {}, action) => {
             const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
 
             if (parentMatch || regularMatch) {
+              const extra = newState[`${hash}Extra`];
               const newValue = newState[hash].value.map((item) => {
                 if (item.id === id) {
-                  return data;
+                  let match = true;
+                  Object.keys(extra).forEach((e) => {
+                    if (extra[e] != data[e]) {
+                      match = false;
+                    }
+                  });
+
+                  if (match) {
+                    return data;
+                  }
+
+                  return false;
                 }
 
                 return item;
               }).filter((item) => item !== false);
 
-              newState[hash] = PromiseState.resolve(newValue);
+              newState[hash] = PromiseState.resolve(newValue, newState[hash].meta);
             }
           }
         });
@@ -115,6 +127,8 @@ const reducer = (state = {}, action) => {
             }
           }
         });
+
+        return newState;
       }
 
       return state;
