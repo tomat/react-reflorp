@@ -61,13 +61,13 @@
     "webpack": "2.1.0-beta.7"
   },
   "dependencies": {
+    "extend": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
     "invariant": "^2.0.0",
-    "warning": "^2.1.0",
-    "redux": "^2.0.0 || ^3.0.0",
     "react-redux": "^4.0.0",
-    "react-refetch": "^1.0.0-beta.0",
-    "extend": "^3.0.0"
+    "react-refetch": "^1.0.0-beta.4",
+    "redux": "^2.0.0 || ^3.0.0",
+    "warning": "^2.1.0"
   },
   "peerDependencies": {
     "react": "^0.14.0 || ^15.0.0-rc"
