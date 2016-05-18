@@ -37,8 +37,6 @@ import debounce from '../utils/debounce.js';
     if (entityData.edit !== false) {
       mapping[entity] = { id: entityData.id, parentId: entityData.parentId, edit: true, extra: entityData.extra };
       mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
-      mapping[`${entity}Create`] = true;
-      mapping[`${entity}CreateResponse`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}Edit`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}EditDraft`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}EditResponse`] = { id: entityData.id, parentId: entityData.parentId };
@@ -47,6 +45,10 @@ import debounce from '../utils/debounce.js';
     } else {
       mapping[entity] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra };
       mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra };
+    }
+    if (entityData.create) {
+      mapping[`${entity}Create`] = true;
+      mapping[`${entity}CreateResponse`] = { id: entityData.id, parentId: entityData.parentId };
     }
     if (entityData.parentId && !entityData.id) {
       mapping[`${entity}LoadMore`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
