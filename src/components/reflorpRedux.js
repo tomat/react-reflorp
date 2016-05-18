@@ -71,7 +71,6 @@ export default (mappings, ...restRedux) => {
       // List of entities
       } else if (pluralMatches && entities[pluralMatches[1]] && entities[pluralMatches[1]].singular) {
         const injectHash = getName(entities[pluralMatches[1]].singular, id, parentId, extra);
-        console.log('injecting ' + injectHash, entities[pluralMatches[1]].singular, id, parentId, extra);
         ret[entity] = state.reflorp[injectHash];
       // Function for creating an entity
       } else if (createMatches && entities[createMatches[1]]) {

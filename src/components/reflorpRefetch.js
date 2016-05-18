@@ -85,8 +85,6 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
       const entityName = entities[pluralMatches[1]].singular;
       const hashedName = getName(entityName, realId, parentId, extra);
 
-      console.log('refetch ' + hashedName, entityName, realId, parentId, extra);
-
       const url = getUrl(entityName, realId, parentId, extra);
       realMapStateToProps[key] = {
         url,
@@ -174,7 +172,7 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
               draft.saved = true;
               store.dispatch(update(`${singleHash}Draft`, draft));
 
-              store.dispatch(appendAllLists(entityName, parentId, [value]));
+              store.dispatch(appendAllLists(entityName, parentId, [ value ]));
 
               if (entityConfiguration.count) {
                 const parentHash = getName(entityConfiguration.parent, parentId);
