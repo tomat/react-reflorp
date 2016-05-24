@@ -58,7 +58,7 @@ const reducer = (state = {}, action) => {
         const { entityName, id, parentId, data } = action;
 
         Object.keys(state).forEach((hash) => {
-          if (newState[hash].value && newState[hash].value.map) {
+          if (newState[hash] && newState[hash].value && newState[hash].value.map) {
             const parentMatch = (parentId && hash.match(new RegExp('^' + entityName + '\-list\-' + parentId + '\-')));
             const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
 
