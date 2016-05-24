@@ -50,9 +50,9 @@ import debounce from '../utils/debounce.js';
       mapping[`${entity}Create`] = true;
       mapping[`${entity}CreateResponse`] = { id: entityData.id, parentId: entityData.parentId };
     }
-    if (entityData.parentId && !entityData.id) {
-      mapping[`${entity}LoadMore`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
-      mapping[`${entity}LoadMoreResponse`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
+    if (!entityData.id) {
+      mapping[`${entity}LoadMore`] = { id: entityData.id || false, parentId: entityData.parentId || false, extra: entityData.extra };
+      mapping[`${entity}LoadMoreResponse`] = { id: entityData.id || false, parentId: entityData.parentId || false, extra: entityData.extra };
     }
   });
 
