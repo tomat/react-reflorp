@@ -79,7 +79,7 @@ const reducer = (state = {}, action) => {
                 if (item.id === id) {
                   let match = true;
                   Object.keys(extra).forEach((e) => {
-                    if (extra[e] != data[e]) {
+                    if (typeof data[e] !== 'undefined' && extra[e] != data[e]) {
                       match = false;
                     }
                   });
@@ -120,7 +120,7 @@ const reducer = (state = {}, action) => {
                 if (done.indexOf(item.id) === -1) {
                   let match = true;
                   Object.keys(extra).forEach((e) => {
-                    if (extra[e] != item[e]) {
+                    if (typeof item[e] !== 'undefined' && extra[e] != item[e]) {
                       match = false;
                     }
                   });
