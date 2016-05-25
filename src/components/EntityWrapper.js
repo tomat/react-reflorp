@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { PromiseState } from 'react-refetch';
 import redux from './reflorpRedux';
 import refetch from './reflorpRefetch';
-import debounce from '../utils/debounce.js';
+import debounce from 'lodash.debounce';
 
 @refetch((props) => {
   const mapping = {};
@@ -178,6 +178,17 @@ class EntityWrapper extends Component {
     const createResponses = [];
     const deleteResponses = [];
     const editResponses = [];
+
+    const debounces = [];
+
+    const flush = () => {
+      debounces.forEach((d) => {
+        if (d.flush) {
+          d.flush();
+        }
+      });
+    };
+
     Object.keys(entityList).forEach((entityKey) => {
       const createResponse = this.props[`${entityKey}CreateResponse`];
       const editResponse = this.props[`${entityKey}EditResponse`];
@@ -203,8 +214,8 @@ class EntityWrapper extends Component {
         if (this.props[`${entityKey}Original`]) {
           datas[`${entityKey}Original`] = this.props[`${entityKey}Original`].value;
         }
-        edits[entityKey] = this.props[`${entityKey}Edit`];
-        editDrafts[entityKey] = this.props[`${entityKey}EditDraft`];
+        edits[entityKey] = (...args) => { flush(); return this.props[`${entityKey}Edit`](...args); };
+        editDrafts[entityKey] = (...args) => { flush(); return this.props[`${entityKey}EditDraft`](...args); };
         deletes[entityKey] = this.props[`${entityKey}Delete`];
       }
       if (createResponse) {
@@ -259,14 +270,19 @@ class EntityWrapper extends Component {
     };
 
     childProps.handleChange = (e) => {
-      const name = e.target.name;
-
+      let name;
       let value;
+      if (e.target) {
+        name = e.target.name;
 
-      if (e.target.type === 'checkbox') {
-        value = !!e.target.checked;
+        if (e.target.type === 'checkbox') {
+          value = !!e.target.checked;
+        } else {
+          value = e.target.value;
+        }
       } else {
-        value = e.target.value;
+        name = e.name;
+        value = e.value;
       }
 
       if (name) {
@@ -277,14 +293,16 @@ class EntityWrapper extends Component {
           editDrafts[myEntity](newData);
         } else {
           const newData = { ...datas[entity] };
-          newData[e.target.name] = value;
+          newData[name] = value;
           editDrafts[entity](newData);
         }
       }
     };
 
-    childProps.handleChangeDebounced = (wait = 50) => {
+    childProps.handleChangeDebouncedCustom = (wait = 50) => {
       const debouncedChange = debounce(childProps.handleChange, wait);
+
+      debounces.push(debouncedChange);
 
       return (e) => {
         if (e.persist) {
@@ -294,6 +312,8 @@ class EntityWrapper extends Component {
         debouncedChange(e);
       }
     };
+
+    childProps.handleChangeDebounced = childProps.handleChangeDebouncedCustom(50);
 
     return (
       <div className={[ (className ? className : ''), 'reflorp-loader', (allResponses && (allResponses.pending || allResponses.refreshing) ? 'reflorp-loader-loading' : '') ].join(' ')}>

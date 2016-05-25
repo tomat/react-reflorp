@@ -1,5 +1,5 @@
 import { connect as connectRefetch, PromiseState } from 'react-refetch';
-import { remove, create, update, updateMulti, updateAllLists, appendAllLists, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
+import { remove, create, update, updateMulti, updateBatch, updateAllLists, appendAllLists, refreshing, increaseCount, decreaseCount } from '../utils/reducer';
 import getUrl from '../utils/getUrl';
 import getName from '../utils/getName';
 import extend from 'extend';
@@ -163,28 +163,31 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
               return buildRequest(mapping);
             },
             then: (value) => {
-              store.dispatch(update(`${hash}CreateResponse`, PromiseState.resolve(value)));
+              const multi = [];
+              multi.push(update(`${hash}CreateResponse`, PromiseState.resolve(value)));
 
               const singleHash = getName(entityName, value.id, parentId);
-              store.dispatch(update(singleHash, PromiseState.resolve(value)));
+              multi.push(update(singleHash, PromiseState.resolve(value)));
 
               const draft = PromiseState.resolve(value);
               draft.saved = true;
-              store.dispatch(update(`${singleHash}Draft`, draft));
+              multi.push(update(`${singleHash}Draft`, draft));
 
-              store.dispatch(appendAllLists(entityName, parentId, [ value ]));
+              multi.push(appendAllLists(entityName, parentId, [ value ]));
 
               if (entityConfiguration.count) {
                 const parentHash = getName(entityConfiguration.parent, parentId);
-                store.dispatch(increaseCount(parentHash, entityConfiguration.count));
+                multi.push(increaseCount(parentHash, entityConfiguration.count));
               }
 
               // There may be a draft here with id = 0, so remove it
               if (parentId) {
-                store.dispatch(remove(`${getName(entityName, '0', parentId)}Draft`));
+                multi.push(remove(`${getName(entityName, '0', parentId)}Draft`));
               } else {
-                store.dispatch(remove(`${getName(entityName, '0')}Draft`));
+                multi.push(remove(`${getName(entityName, '0')}Draft`));
               }
+
+              store.dispatch(updateBatch(multi));
 
               return {
                 value,

@@ -52,6 +52,17 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
+    case prefix + 'UPDATE_BATCH':
+      if (typeof action.data !== 'undefined') {
+        let newState = extend(false, {}, state);
+        Object.keys(action.data).forEach((hash) => {
+          newState = reducer(newState, action.data[hash]);
+        });
+
+        return newState;
+      }
+
+      return state;
     case prefix + 'UPDATE_ALL_LISTS':
       if (typeof action.data !== 'undefined') {
         const newState = extend(false, {}, state);
@@ -98,7 +109,7 @@ const reducer = (state = {}, action) => {
         const { entityName, parentId, data } = action;
 
         Object.keys(state).forEach((hash) => {
-          if (newState[hash].value && newState[hash].value.map) {
+          if (newState[hash] && newState[hash].value && newState[hash].value.map) {
             const parentMatch = (parentId && hash.match(new RegExp('^' + entityName + '\-list\-' + parentId + '\-')));
             const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
 
@@ -193,6 +204,11 @@ export const updateAllLists = (entityName, id, parentId, data) => ({
 
 export const updateMulti = (data) => ({
   type: prefix + 'UPDATE_MULTI',
+  data,
+});
+
+export const updateBatch = (data) => ({
+  type: prefix + 'UPDATE_BATCH',
   data,
 });
 
