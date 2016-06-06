@@ -234,7 +234,7 @@ class EntityWrapper extends Component {
 
     const allResponses = PromiseState.all(responses);
     const dataResponsesPs = PromiseState.all(dataResponses);
-    const error = (allResponses && allResponses.rejected ? allResponses.reason.message : '');
+    const error = (allResponses && allResponses.rejected ? (allResponses.reason ? allResponses.reason.message : 'Unknown error') : '');
 
     if (!children) {
       return null;
