@@ -315,6 +315,10 @@ class EntityWrapper extends Component {
 
     childProps.handleChangeDebounced = childProps.handleChangeDebouncedCustom(50);
 
+    if (navigator.product === 'ReactNative') {
+      return (childProps.hasData || !hideUntilLoaded ? React.cloneElement(React.Children.only(children), childProps) : null);
+    }
+
     return (
       <div className={[ (className ? className : ''), 'reflorp-loader', (allResponses && (allResponses.pending || allResponses.refreshing) ? 'reflorp-loader-loading' : '') ].join(' ')}>
         {(childProps.hasData || !hideUntilLoaded ? React.cloneElement(React.Children.only(children), childProps) : <noscript />)}
