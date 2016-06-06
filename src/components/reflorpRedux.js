@@ -77,7 +77,7 @@ export default (mappings, ...restRedux) => {
         ret[entity] = state.reflorp[entity];
       // Response to entity creation
       } else if (createResponseMatches && entities[createResponseMatches[1]]) {
-        ret[entity] = state.reflorp[`${getName(createResponseMatches[1], false, parentId)}CreateResponse`];
+        ret[entity] = state.reflorp[`${getName(createResponseMatches[1], '0', parentId)}CreateResponse`];
       // Function for editing an entity
       } else if (editMatches && entities[editMatches[1]]) {
         if (id == 0) {

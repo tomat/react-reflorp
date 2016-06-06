@@ -136,10 +136,10 @@ export default (mapStateToProps) => connectRefetch((props, context) => {
           let hash;
           if (entityConfiguration.parent && parentId) {
             url = getUrl(entityName, false, parentId);
-            hash = getName(entityName, false, parentId);
+            hash = getName(entityName, '0', parentId);
           } else {
             url = getUrl(entityName);
-            hash = getName(entityName);
+            hash = getName(entityName, '0');
           }
 
           const ret = {};
