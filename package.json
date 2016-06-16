@@ -1,6 +1,6 @@
 {
   "name": "react-reflorp",
-  "version": "0.16.5",
+  "version": "0.16.6",
   "description": "Basically a simple ORM using React Refetch as a backend, but the data is stored in the Redux store.",
   "main": "./lib/index.js",
   "scripts": {
