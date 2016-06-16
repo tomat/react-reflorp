@@ -287,11 +287,10 @@ class EntityWrapper extends Component {
 
       if (name) {
         if (name.indexOf('.') !== -1) {
-          const [ myEntity, field ] = name.split('.');
+          const [ myEntity, field, field2 ] = name.split('.');
           const newData = { ...datas[myEntity] };
-          if (field.indexOf('.') !== -1) {
-            const parts = field.split('.');
-            newData[parts[0]][parts[1]] = value;
+          if (field2) {
+            newData[field][field2] = value;
           } else {
             newData[field] = value;
           }
