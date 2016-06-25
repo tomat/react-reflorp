@@ -29,6 +29,7 @@ export default (mappings, ...restRedux) => {
       const parentId = entityMapping.parentId || false;
       const then = entityMapping.then || ((value) => value);
       const extra = entityMapping.extra || {};
+      const defaults = entityMapping.defaults || false;
       const pluralMatches = entity.match(/^(.+)$/);
       const createMatches = entity.match(/^(.+)Create$/);
       const originalMatches = entity.match(/^(.+)Original$/);
@@ -46,7 +47,7 @@ export default (mappings, ...restRedux) => {
 
         // If id is 0 we are creating a new entity, so use default data as a fallback
         if (id == 0 && !ret[entity] && entities[entity]) {
-          ret[entity] = PromiseState.resolve(entities[entity].defaults || { id: 0 });
+          ret[entity] = PromiseState.resolve(defaults || entities[entity].defaults || { id: 0 });
         }
       // Single original entity belonging to parent
       } else if (originalMatches && entities[originalMatches[1]] && parentId) {
@@ -60,7 +61,7 @@ export default (mappings, ...restRedux) => {
 
         // If id is 0 we are creating a new entity, so use default data as a fallback
         if (id == 0 && !ret[entity] && entities[entity]) {
-          ret[entity] = PromiseState.resolve(entities[entity].defaults || { id: 0 });
+          ret[entity] = PromiseState.resolve(defaults || entities[entity].defaults || { id: 0 });
         }
       // Simple single original entity
       } else if (originalMatches && entities[originalMatches[1]] && entities[originalMatches[1]].plural !== originalMatches[1]) {

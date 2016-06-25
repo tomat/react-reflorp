@@ -24,7 +24,7 @@ import debounce from 'lodash.debounce';
   const mapping = {};
   const entityList = props.entities || {};
   if (props.entity) {
-    entityList[props.entity] = { id: props.id, parentId: props.parentId, edit: props.edit, create: props.create, extra: props.extra };
+    entityList[props.entity] = { id: props.id, parentId: props.parentId, edit: props.edit, create: props.create, extra: props.extra, defaults: props.defaults };
   }
 
   Object.keys(entityList).forEach((entity) => {
@@ -35,16 +35,16 @@ import debounce from 'lodash.debounce';
     }
 
     if (entityData.edit !== false) {
-      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, edit: true, extra: entityData.extra };
-      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra };
+      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, edit: true, extra: entityData.extra, defaults: entityData.defaults };
+      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, extra: entityData.extra, defaults: entityData.defaults };
       mapping[`${entity}Edit`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}EditDraft`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}EditResponse`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}Delete`] = { id: entityData.id, parentId: entityData.parentId };
       mapping[`${entity}DeleteResponse`] = { id: entityData.id, parentId: entityData.parentId };
     } else {
-      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra };
-      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra };
+      mapping[entity] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra, defaults: entityData.defaults };
+      mapping[`${entity}Original`] = { id: entityData.id, parentId: entityData.parentId, then: entityData.then, extra: entityData.extra, defaults: entityData.defaults };
     }
     if (entityData.create) {
       mapping[`${entity}Create`] = true;
