@@ -1,6 +1,6 @@
 import { PropTypes, Component } from 'react';
 import refetch, { getStore, getEntities } from './reflorpRefetch';
-import { update } from '../utils/reducer';
+import { updateMulti } from '../utils/reducer';
 
 @refetch(() => {
   const create = {};
@@ -36,13 +36,17 @@ export default class ReflorpWrapper extends Component {
   refresh(props) {
     const store = getStore();
 
+    const updates = {};
+
     Object.keys(getEntities()).forEach((entity) => {
-      store.dispatch(update(`${entity}Create`, props[`${entity}Create`]));
-      store.dispatch(update(`${entity}Edit`, props[`${entity}Edit`]));
-      store.dispatch(update(`${entity}EditDraft`, props[`${entity}EditDraft`]));
-      store.dispatch(update(`${entity}Delete`, props[`${entity}Delete`]));
-      store.dispatch(update(`${entity}LoadMore`, props[`${entity}LoadMore`]));
+      updates[`${entity}Create`] = props[`${entity}Create`];
+      updates[`${entity}Edit`] = props[`${entity}Edit`];
+      updates[`${entity}EditDraft`] = props[`${entity}EditDraft`];
+      updates[`${entity}Delete`] = props[`${entity}Delete`];
+      updates[`${entity}LoadMore`] = props[`${entity}LoadMore`];
     });
+
+    store.dispatch(updateMulti(updates));
   }
 
   render() {
