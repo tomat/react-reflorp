@@ -103,6 +103,57 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
+    case prefix + 'APPEND_LIST':
+      if (typeof action.data !== 'undefined') {
+        const newState = extend(false, {}, state);
+        const { name, data } = action;
+
+        if (typeof newState[name] !== 'undefined' && newState[name].value && newState[name].value.map) {
+          const newValue = newState[name].value.concat(data);
+
+          newState[name] = PromiseState.resolve(newValue, newState[name].meta);
+
+          return newState;
+        }
+      }
+
+      return state;
+    case prefix + 'UPDATE_LIST':
+      if (typeof action.data !== 'undefined') {
+        const newState = extend(false, {}, state);
+        const { name, data } = action;
+
+        if (typeof newState[name] !== 'undefined' && newState[name].value && newState[name].value.map) {
+          const newValue = newState[name].value.map((k) => {
+            if (k.id === data.id) {
+              return data;
+            }
+
+            return k;
+          });
+
+          newState[name] = PromiseState.resolve(newValue, newState[name].meta);
+
+          return newState;
+        }
+      }
+
+      return state;
+    case prefix + 'REMOVE_FROM_LIST':
+      if (typeof action.id !== 'undefined') {
+        const newState = extend(false, {}, state);
+        const { name, id } = action;
+
+        if (typeof newState[name] !== 'undefined' && newState[name].value && newState[name].value.map) {
+          const newValue = newState[name].value.filter((k) => (k.id !== id));
+
+          newState[name] = PromiseState.resolve(newValue, newState[name].meta);
+
+          return newState;
+        }
+      }
+
+      return state;
     case prefix + 'APPEND_ALL_LISTS':
       if (typeof action.data !== 'undefined') {
         const newState = extend(false, {}, state);
@@ -147,6 +198,30 @@ const reducer = (state = {}, action) => {
       if (state[action.name] && state[action.name].value) {
         const newState = extend(true, {}, state);
         newState[action.name] = PromiseState.refresh(newState[action.name]);
+
+        return newState;
+      }
+
+      return state;
+    case prefix + 'UNREFRESHING':
+      if (state[action.name] && state[action.name].value) {
+        const newState = extend(true, {}, state);
+        newState[action.name] = PromiseState.resolve(newState[action.name].value);
+
+        return newState;
+      }
+
+      return state;
+    case prefix + 'REJECT':
+      if (typeof action.data !== 'undefined') {
+        const newState = extend(true, {}, state);
+        if (state[action.name] && state[action.name].value) {
+          newState[action.name] = PromiseState.resolve(newState[action.name].value);
+          newState[action.name].rejected = true;
+          newState[action.name].reason = action.data.message;
+        } else {
+          newState[action.name] = PromiseState.reject(action.data.message);
+        }
 
         return newState;
       }
@@ -212,6 +287,24 @@ export const updateBatch = (data) => ({
   data,
 });
 
+export const appendList = (name, data) => ({
+  type: prefix + 'APPEND_LIST',
+  name,
+  data,
+});
+
+export const updateList = (name, data) => ({
+  type: prefix + 'UPDATE_LIST',
+  name,
+  data,
+});
+
+export const removeFromList = (name, id) => ({
+  type: prefix + 'REMOVE_FROM_LIST',
+  name,
+  id,
+});
+
 export const appendAllLists = (entityName, parentId, data) => ({
   type: prefix + 'APPEND_ALL_LISTS',
   entityName,
@@ -222,6 +315,17 @@ export const appendAllLists = (entityName, parentId, data) => ({
 export const refreshing = (name) => ({
   type: prefix + 'REFRESHING',
   name,
+});
+
+export const unRefreshing = (name) => ({
+  type: prefix + 'UNREFRESHING',
+  name,
+});
+
+export const reject = (name, data) => ({
+  type: prefix + 'REJECT',
+  name,
+  data,
 });
 
 export const increaseCount = (name, key) => ({

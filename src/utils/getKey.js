@@ -1,39 +1,47 @@
-const getUrl = ({ entityConfiguration, id = false, parentId = false, extra = {} }) => {
+const getKey = ({ entityConfiguration, id = false, parentId = false, extra = {}, flags = [] }) => {
   const entity = entityConfiguration.entity;
 
-  let url = '';
+  let key = '';
 
   // Has parent, so add the parent URL first
   if (entityConfiguration.parentEntity && parentId !== false) {
-    url += getUrl({
+    key += getKey({
       entityConfiguration: entityConfiguration.parentConfiguration,
       entity: entityConfiguration.parentEntity,
       id: parentId,
       parentId: false,
-      extra: {},
     });
   }
 
-  url += '/';
+  key += '/';
 
   if (entityConfiguration.plural) {
-    url += entityConfiguration.plural;
+    key += entityConfiguration.plural;
   } else {
-    url += `${entity}s`;
+    key += `${entity}s`;
   }
 
   if (id) {
-    url += `/${id}`;
+    key += `/${id}`;
   }
 
   if (Object.keys(extra).length > 0) {
-    url += '?';
+    key += '?';
     Object.keys(extra).forEach((k) => {
-      url += `${k}=${extra[k]}&`;
+      key += `${k}=${extra[k]}&`;
     });
   }
 
-  return url;
+  flags.forEach((f, i) => {
+    if (i === 0) {
+      key += '#';
+    } else {
+      key += '-';
+    }
+    key += f;
+  });
+
+  return key;
 };
 
-export default getUrl;
+export default getKey;

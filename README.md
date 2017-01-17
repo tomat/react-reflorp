@@ -18,163 +18,208 @@ This assumes that you’re using [npm](http://npmjs.com/) package manager with a
 
 ## Set up
 
-Configure Reflorp, this needs to happen before any code using a Reflorp decorator is loaded, and needs the store.
-
 In the following example code we have a simple app with boards and notes. Each board has a number of notes.
 
-```javascript
-// store.js
+Boards have a single text field: `title`.
 
-import { reflorpSetStore, reflorpSetEntities, reflorpSetBaseUrl } from 'react-reflorp';
+Notes also have a single text field: `summary`.
+
+First, add the `Container` with a configuration object as a child of the `react-redux` `Provider`:
+
+```javascript
+// app.js
+
+import { Container as ReflorpContainer } from 'react-reflorp';
 
 [...]
 
-reflorpSetBaseUrl('/api');
-reflorpSetEntities({
-  board: {
-    plural: 'boards'
+const configuration = {
+  entities: {
+    board: {
+      plural: 'boards',
+    },
+    note: {
+      parent: 'board',
+      plural: 'notes',
+    },
   },
-  note: {
-    parent: 'board',
-    plural: 'notes',
-  },
-});
-reflorpSetStore(store);
+  baseUrl: '/api',
+};
+
+ReactDOM.render(
+  <Provider store={store}>
+    <ReflorpContainer configuration={configuration}>
+      <App />
+    </ReflorpContainer>
+  </Provider>,
+  document.getElementById('app')
+);
 ```
 
-Add the Reflorp Redux reducer with the key `reflorp` (important!).
+Then, add the reducer:
 
 ```javascript
 // reducers.js
 
-import { reflorpReducer } from 'react-reflorp';
+import { reducer as reflorp } from 'react-reflorp';
 
 export default {
-  reflorp: reflorpReducer,
+  reflorp,
 };
-```
-
-Add the `ReflorpWrapper` component to your upmost component (i e `App`):
-
-```javascript
-// App.js
-
-import { ReflorpWrapper } from 'react-reflorp';
-
-[...]
-
-const App = ({ children }) => (
-  <div className="app">
-    <ReflorpWrapper />
-    {children}
-  </div>
-);
 ```
 
 ## Usage
 
-Both the `@refetch` and the `@redux` decorator will transparently handle data that does not match a configured entity as if it was sent to the regular `@connect` decorator.
+### Backend
 
-### Refetch (@refetch)
+Currently URL:s are automatically generated, and the basic structure can not be changed.
 
-Corresponds to the `@connect` decorator from `react-refetch`.
+URL:s and methods are based on the names of the entities and the kind of request we're doing.
 
-Use the `@refetch` decorator to load data.
+#### Single endpoints
 
-Note that we don't actually catch any Reflorp props in this example, since all the data will be stored in the Redux store, and we don't use the data in this component anyway. Also, it is probably a bad idea to mix `@refetch` with `@redux` on the same component, use a wrapper!
+Single board with id 1: `/board/1`
+Single note with id 2 belonging to board with id 1: `/board/1/notes/2`
+
+When `PATCH`:ing or `GET`:ing, single-endpoints should always return only the object requested.
+
+Deleting an entity results in a `DELETE` to the single-endpoint.
+
+#### List endpoints
+
+List of boards, and used for creating new boards: `/boards`
+List of notes belonging to board with id 1, and used for creating new notes on that board: `/board/1/notes`
+
+Creating a new entity results in a `POST` to the corresponding list collection (creating a new board will `POST` to `/boards`), that should return the created object only.
+
+##### Pagination
+
+There is built-in rudimentary support for pagination, if you call `EntityListState#more()` a new `GET` will be sent to the same endpoint but with `?page=2`, and the result is appended to the end of the list. The page number is incremented until it receives an empty response.
+
+If an empty page has been received the `EntityListState#hasMore` property is set to `false`.
+
+### Frontend
+
+The `@reflorp` decorator corresponds to the `@connect` decorator from `react-refetch`.
+
+It takes a function mapping `props` and `context` to entities.
+
+#### Loading and displaying
 
 ```javascript
-// ViewBoardPage.js
+// Board.js
 
 import React, { PropTypes, Component } from 'react';
-import ViewBoard from 'components/ViewBoard';
-import { PromiseState } from 'react-refetch';
-import { refetch } from 'react-reflorp';
+import { reflorp, EntityState, EntityListState } from 'react-reflorp';
 
-@refetch(({ params }) => ({
-  board: { id: params.id },       // fetch the board data: GET /api/boards/${params.id}
-  notes: { parentId: params.id }, // fetch the notes belonging to this board: GET /api/boards/${params.id}/notes
-  foobar: { url: '/foo/bar' },    // regular Refetch
+@reflorp(({ id }) => ({
+  board: { id, load: true },           // fetch the board data: GET /api/boards/${id}
+  notes: { parentId: id, load: true }, // fetch the notes belonging to this board: GET /api/boards/${id}/notes
 }))
-export default class ViewBoardPage extends Component {
+export default class Board extends Component {
   static propTypes = {
-    params: PropTypes.object,
-    foobar: PropTypes.instanceOf(PromiseState),
+    board: PropTypes.instanceOf(EntityState),
+    notes: PropTypes.instanceOf(EntityListState),
   };
 
   render() {
-    const { params } = this.props;
+    const { notes, board } = this.props;
+    
+    if (!notes.isFulfilled() || !board.isFulfilled()) {
+      return <div>Loading...</div>;
+    }
 
     return (
-      <ViewBoard id={params.id} />
+      <div>
+        <h1>{board.data.value.title}</h1>
+        <ul>
+          {notes.data.value.map((note) => (
+            <li>{note.summary}</li>
+          ))}
+        </ul>
+        {notes.hasMore && (
+          <button onClick={notes.more}>Load more notes...</button>
+        )}
+      </div>
     );
   }
 }
 ```
 
-### Redux (@redux)
-
-Corresponds to the `@connect` decorator from `react-redux`. 
-
-Use the `@redux` decorator to inject data and helper functions. Everything that does not match an entity that is configured in Reflorp will be transparently handled as regular Redux:
+#### Creating
 
 ```javascript
-// ViewBoard.js
+// CreateBoard.js
 
 import React, { PropTypes, Component } from 'react';
-import { PromiseState } from 'react-refetch';
-import { redux } from 'react-reflorp';
-import Note from 'components/Note';
-import LoadMoreButton from 'components/LoadMoreButton';
+import { reflorp, EntityState } from 'react-reflorp';
 
-@redux((state, props) => ({
-  board: props.id,                       // injects the board data
-  notes: {                               // injects the notes data, sorted by nr
-    parentId: props.id,
-    then: (notes) => (notes || null) && notes.sort((note1, note2) => note1.nr > note2.nr),
+@reflorp(() => ({
+  board: {
+    create: true,
+    onCreate: (board) => {
+      const boardId = board.value.id;
+      // Here you may for example redirect to the view board page
+    },
   },
-  notesLoadMore: { parentId: props.id }, // injects a function that loads the next page of notes: GET /api/boards/${props.id}/notes?page=2
-  bazqux: state.bazqux,                  // handled by Redux as usual
 }))
-export default class ViewBoard extends Component {
+export default class CreateBoard extends Component {
   static propTypes = {
-    id: PropTypes.any,
-    board: PropTypes.instanceOf(PromiseState).isRequired,
-    notes: PropTypes.instanceOf(PromiseState).isRequired,
-    notesLoadMore: PropTypes.func,
-    bazqux: PropTypes.any,
+    board: PropTypes.instanceOf(EntityState),
   };
 
   render() {
-    const { board, notes, id, notesLoadMore } = this.props;
-
-    const view = PromiseState.all([board, notes]);
-
-    let note;
+    const { board } = this.props;
 
     return (
-      <div className={['hasLoader', (view.pending ? 'loading' : '')].join(' ')}>
-        <Choose>
-          <When condition={view.fulfilled}>
-            <h1>{board.value.title}</h1>
-            <div className="container-fluid">
-              <For each="note" of={notes.value} index="i">
-                <Note key={note.id} note={note} />
-              </For>
-            </div>
-            <If condition={board.value.notesCount > notes.value.length}>
-              <div key="loadMoreButton" className="text-center">
-                <LoadMoreButton onClick={notesLoadMore} loading={view.refreshing} />
-              </div>
-            </If>
-          </When>
-          <When condition={view.rejected}>
-            <div className="alert alert-danger">
-              <span>{view.reason}</span>
-            </div>
-          </When>
-        </Choose>
-      </div>
+      <form>
+        <input onChange={board.handleChange} type="text" name="title" placeholder="Title" />
+        <button disabled={board.isLoading()} onClick={board.save}>Create new board</button>
+        {board.getError()}
+      </form>
+    );
+  }
+}
+```
+
+#### Editing and deleting
+
+```javascript
+// EditNote.js
+
+import React, { PropTypes, Component } from 'react';
+import { reflorp, EntityState } from 'react-reflorp';
+
+@reflorp(({ noteId, boardId }) => ({
+  note: {
+    id: noteId,
+    parentId: boardId,
+    load: true,
+    onDel: () => {
+      // Callback for when the note has been deleted
+      // Here you may for example redirect back to another view
+    },
+  },
+}))
+export default class EditNote extends Component {
+  static propTypes = {
+    note: PropTypes.instanceOf(EntityState),
+  };
+
+  render() {
+    const { note } = this.props;
+    
+    if (note.isFulfilled()) {
+      return <div>Loading...</div>;
+    }
+
+    return (
+      <form>
+        <input defaultValue={note.data.value.summary} onChange={note.handleChange} type="text" name="summary" placeholder="Summary" />
+        <button disabled={note.isLoading()} onClick={note.save}>Save note</button>
+        <button disabled={note.isLoading()} onClick={note.del}>Delete note</button>
+        {note.getError()}
+      </form>
     );
   }
 }
