@@ -222,7 +222,7 @@ export default class EditNote extends Component {
   render() {
     const { note } = this.props;
     
-    if (!note.pending) {
+    if (note.pending) {
       return <div>Loading...</div>;
     }
 
@@ -237,7 +237,7 @@ export default class EditNote extends Component {
         />
         <button disabled={note.loading} onClick={note.save}>Save note</button>
         <button disabled={note.loading} onClick={note.del}>Delete note</button>
-        {note.rejected && note.error}
+        {note.draft.rejected && note.draft.reason}
       </form>
     );
   }
