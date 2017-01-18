@@ -33,28 +33,28 @@ export default class EntityState {
     this.dispatch = dispatch;
 
     /** @type bool */
-    this.pending = this.data.pending;
+    this.pending = !!(this.data && this.data.pending);
 
     /** @type bool */
-    this.refreshing = this.data.refreshing;
+    this.refreshing = !!(this.data && this.data.refreshing);
 
     /** @type bool */
     this.loading = this.pending || this.refreshing;
 
     /** @type bool */
-    this.fulfilled = this.data.fulfilled;
+    this.fulfilled = !!(this.data && this.data.fulfilled);
 
     /** @type bool */
-    this.settled = this.data.settled;
+    this.settled = !!(this.data && this.data.settled);
 
     /** @type bool */
-    this.rejected = this.data.rejected;
+    this.rejected = !!(this.data && this.data.rejected);
 
     /** @type object|string */
-    this.reason = this.data.reason;
+    this.reason = this.data && this.data.reason;
 
     /** @type object */
-    this.value = this.data.value;
+    this.value = this.data && this.data.value;
 
     /** @type string|bool */
     this.error = (
