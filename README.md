@@ -284,6 +284,10 @@ we're in edit or create mode) to the backend
 - `del(thenCallback, catchCallback)`: sends a `DELETE` to the backend
   - If this request is successful the entity will be removed entirely from the store
 - `reset()`: resets the draft to the latest data fetched from the backend
+- `handleChange()`: helper function that updates fields in the draft according to the `name` attribute of the `input`
+field it is called from
+  - `<input onChange={note.handleChange} name="summary">` will keep the `summary` field of the `note` draft updated
+  when the input value is changed, see the [Editing and deleting](#editing-and-deleting) example above.
 
 ### EntityListState
 
@@ -298,7 +302,7 @@ It has the following properties:
 - `hasMore` - `bool`: true if the next page of this list is probably not empty
 
 And the following functions:
-- `more()`: fetches additional data from the backend, see the Pagination section further up
+- `more()`: fetches additional data from the backend, see [Pagination.](#pagination)
 
 # Support
 
