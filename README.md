@@ -1,14 +1,15 @@
 React Reflorp
 =========================
 
-Basically a simple ORM using [React Refetch](https://github.com/heroku/react-refetch) as a backend, but the data is stored in the [Redux](https://github.com/reactjs/redux) store.
+Basically a simple ORM using [react-refetch](https://github.com/heroku/react-refetch), but the data is stored in [Redux](https://github.com/reactjs/redux).
 
 # Example project and demo
+
 An example project can be found [here](https://github.com/tomat/reflorp), and the latest build of it should be live at http://reflorp.com
 
 # Installation
 
-Requires **React 0.14 or later.**
+Requires **React 0.14 or later** and [react-redux](https://github.com/reactjs/react-redux).
 
 ```
 npm install --save react-reflorp
@@ -20,11 +21,13 @@ This assumes that you’re using [npm](http://npmjs.com/) package manager with a
 
 In the following example code we have a simple app with boards and notes. Each board has a number of notes.
 
+We currently only support two level of entities, and an entity can not have multiple parents.
+
 Boards have a single text field: `title`.
 
 Notes also have a single text field: `summary`.
 
-First, add the `Container` with a configuration object as a child of the `react-redux` `Provider`:
+First, add the `Container` with a configuration object as a child of the react-redux `Provider`:
 
 ```javascript
 // app.js
@@ -43,7 +46,7 @@ const configuration = {
       plural: 'notes',
     },
   },
-  baseUrl: '/api',
+  baseUrl: '/api', // is prepended to all URL:s
 };
 
 ReactDOM.render(
@@ -104,11 +107,11 @@ If an empty page has been received the `EntityListState#hasMore` property is set
 
 # Frontend
 
-The `@reflorp` decorator corresponds to the `@connect` decorator from `react-refetch`.
+The `@reflorp` decorator corresponds to the `@connect` decorator from react-refetch.
 
 It takes a function mapping `props` and `context` to entities.
 
-By default it just injects the available data from the `redux` store. With `load: true` it will actually go fetch the
+By default it just injects the available data from the redux store. With `load: true` it will actually go fetch the
 data from the backend, and keep the component informed about that process.
  
 The actual data and metadata is enclosed inside the `EntityState` and `EntityListState` abstractions, which are
@@ -248,7 +251,7 @@ export default class EditNote extends Component {
 The state objects `EntityState` and `EntityListState` are the link between your component and react-reflorp. They
 contain data and metadata about either a single entity, or a list of entities.
 
-We use the excellent `PromiseState` class from `react-refetch`, which is fully documented
+We use the excellent `PromiseState` class from react-refetch, which is fully documented
 [over here](https://github.com/heroku/react-refetch/blob/master/docs/api.md#promisestate).
 
 Both state objects below have these properties of the `data` PromiseState available for easier access:
