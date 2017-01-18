@@ -273,6 +273,7 @@ It has the following properties:
 - `data` - `PromiseState`: describes the state of the data for this entity
 - `draft` - `PromiseState`: describes the state of the draft for this entity
   - the draft contains changes made with `edit()` that have not yet been sent to the server with `save()`
+  - it also contains information on the latest `PATCH` or `DELETE` request for this entity
 - `entity` - `string`: the name of the entity type (i e `board`)
 - `id` - `string`: the id of the entity (i e `1`)
 - `parentId` - `string`: the id of the parent of the entity (i e `2`)
