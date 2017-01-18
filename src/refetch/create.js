@@ -62,7 +62,9 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
             };
           },
           catch: (exception, meta) => {
-            dispatch(reject(newDraftKey, meta.response.statusText));
+            const errorMessage = (exception && exception.message) || meta.response.statusText;
+
+            dispatch(reject(newDraftKey, errorMessage, meta));
 
             return undefined;
           },

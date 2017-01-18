@@ -215,12 +215,14 @@ const reducer = (state = {}, action) => {
     case prefix + 'REJECT':
       if (typeof action.data !== 'undefined') {
         const newState = extend(true, {}, state);
+
+        const errorMessage = (action.data !== '[object Object]' && action.data) || 'Unknown error';
         if (state[action.name] && state[action.name].value) {
-          newState[action.name] = PromiseState.resolve(newState[action.name].value);
+          newState[action.name] = PromiseState.resolve(newState[action.name].value, action.meta);
           newState[action.name].rejected = true;
-          newState[action.name].reason = action.data.message;
+          newState[action.name].reason = errorMessage;
         } else {
-          newState[action.name] = PromiseState.reject(action.data.message);
+          newState[action.name] = PromiseState.reject(errorMessage, action.meta);
         }
 
         return newState;
@@ -322,10 +324,11 @@ export const unRefreshing = (name) => ({
   name,
 });
 
-export const reject = (name, data) => ({
+export const reject = (name, data, meta) => ({
   type: prefix + 'REJECT',
   name,
   data,
+  meta,
 });
 
 export const increaseCount = (name, key) => ({

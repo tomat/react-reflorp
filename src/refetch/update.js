@@ -60,11 +60,13 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
             };
           },
           catch: (exception, meta) => {
+            const errorMessage = (exception && exception.message) || meta.response.statusText;
+
             dispatch(unRefreshing(key));
-            dispatch(reject(draftKey, meta.response.statusText));
+            dispatch(reject(draftKey, errorMessage, meta));
 
             if (callbacks.catch) {
-              callbacks.catch(meta.response.statusText);
+              callbacks.catch(errorMessage);
             }
 
             return undefined;

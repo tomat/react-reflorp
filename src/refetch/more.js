@@ -57,8 +57,9 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
               };
             },
             catch: (exception, meta) => {
-              const errorMessage = meta.response.statusText;
-              dispatch(reject(key, errorMessage));
+              const errorMessage = (exception && exception.message) || meta.response.statusText;
+
+              dispatch(reject(key, errorMessage, meta));
 
               return undefined;
             },

@@ -1,5 +1,5 @@
 import { PromiseState } from 'react-refetch';
-import { update, create, updateMulti } from '../utils/reducer';
+import { update, create, updateMulti, reject } from '../utils/reducer';
 import EntityConfiguration from '../EntityConfiguration';
 import buildRequest from 'react-refetch/lib/utils/buildRequest';
 
@@ -55,8 +55,10 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
             comparison: url,
           };
         },
-        catch: (reason, meta) => {
-          dispatch(update(key, PromiseState.reject(meta.response.statusText)));
+        catch: (exception, meta) => {
+          const errorMessage = (exception && exception.message) || meta.response.statusText;
+
+          dispatch(reject(key, errorMessage, meta));
 
           return undefined;
         },
