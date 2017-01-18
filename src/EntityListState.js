@@ -24,37 +24,44 @@ export default class EntityListState {
     this.dispatch = dispatch;
 
     /** @type bool */
+    this.pending = this.data.pending;
+
+    /** @type bool */
+    this.refreshing = this.data.refreshing;
+
+    /** @type bool */
+    this.loading = this.pending || this.refreshing;
+
+    /** @type bool */
+    this.fulfilled = this.data.fulfilled;
+
+    /** @type bool */
+    this.settled = this.data.settled;
+
+    /** @type bool */
+    this.rejected = this.data.rejected;
+
+    /** @type object|string */
+    this.reason = this.data.reason;
+
+    /** @type object */
+    this.value = this.data.value;
+
+    /** @type string|bool */
+    this.error = (
+      (this.data && this.data.rejected)
+        ? (this.data.reason ? this.data.reason : 'Unknown error')
+        : false
+    );
+
+    /** @type bool */
     this.hasMore = hasMore;
 
     /** @type function */
     this.onMore = onMore;
   }
 
-  isLoading = () => {
-    return !!(this.data && (this.data.pending || this.data.refreshing));
-  };
-
-  isPending = () => {
-    return !!(this.data && this.data.pending);
-  };
-
-  isRefreshing = () => {
-    return !!(this.data && this.data.refreshing);
-  };
-
-  isFulfilled = () => {
-    return !!(this.data && this.data.fulfilled);
-  };
-
   more = () => {
     this.onMore();
-  };
-
-  getError = () => {
-    if (this.data && this.data.rejected) {
-      return this.data.reason;
-    }
-
-    return null;
   };
 }

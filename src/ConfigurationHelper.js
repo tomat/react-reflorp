@@ -230,8 +230,8 @@ export default class ConfigurationHelper {
         dirty: false,
         data: state[key] || null,
         draft: state[draftKey] || state[key] || null,
-        onDel: () => {
-          fetches[delKey]();
+        onDel: (_then = () => {}, _catch = () => {}) => {
+          fetches[delKey]({ then: _then, catch: _catch });
         },
         onEdit: (data) => {
           this.dispatch(update(draftKey, PromiseState.resolve(data)));

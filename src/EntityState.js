@@ -32,6 +32,37 @@ export default class EntityState {
     /** @type function */
     this.dispatch = dispatch;
 
+    /** @type bool */
+    this.pending = this.data.pending;
+
+    /** @type bool */
+    this.refreshing = this.data.refreshing;
+
+    /** @type bool */
+    this.loading = this.pending || this.refreshing;
+
+    /** @type bool */
+    this.fulfilled = this.data.fulfilled;
+
+    /** @type bool */
+    this.settled = this.data.settled;
+
+    /** @type bool */
+    this.rejected = this.data.rejected;
+
+    /** @type object|string */
+    this.reason = this.data.reason;
+
+    /** @type object */
+    this.value = this.data.value;
+
+    /** @type string|bool */
+    this.error = (
+      (this.data && this.data.rejected)
+      ? (this.data.reason ? this.data.reason : 'Unknown error')
+      : false
+    );
+
     /** @type function */
     this.onSave = onSave;
 
@@ -54,50 +85,12 @@ export default class EntityState {
     this.onEdit(newData);
   };
 
-  del = () => {
-    this.onDel();
+  del = (_then, _catch) => {
+    this.onDel(_then, _catch);
   };
 
   reset = () => {
     this.onEdit({ ...this.data.value });
-  };
-
-  isLoading = () => {
-    const dataLoading = !!(this.data && (this.data.pending || this.data.refreshing));
-    const draftLoading = !!(this.draft && (this.draft.pending || this.draft.refreshing));
-
-    return (dataLoading || draftLoading);
-  };
-
-  isRefreshing = () => {
-    const dataRefreshing = !!(this.data && this.data.refreshing);
-    const draftRefreshing = !!(this.draft && this.draft.refreshing);
-
-    return (dataRefreshing || draftRefreshing);
-  };
-
-  isPending = () => {
-    const dataPending = !!(this.data && this.data.pending);
-    const draftPending = !!(this.draft && this.draft.pending);
-
-    return (dataPending || draftPending);
-  };
-
-  isFulfilled = () => {
-    return !!(this.data && this.data.fulfilled);
-  };
-
-  getError = () => {
-    let error = false;
-    if (this.data && this.data.rejected) {
-      error = this.data.reason;
-    }
-
-    if (this.draft && this.draft.rejected) {
-      error = this.draft.reason;
-    }
-
-    return (error === false ? error : (error ? error : 'Unknown error'));
   };
 
   handleChange = ({ target, property, value }) => {
