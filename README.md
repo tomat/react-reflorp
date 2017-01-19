@@ -1,7 +1,7 @@
 React Reflorp
 =========================
 
-Basically a simple ORM using [react-refetch](https://github.com/heroku/react-refetch), but the data is stored in [Redux](https://github.com/reactjs/redux).
+Basically a simple ORM using [Refetch](https://github.com/heroku/react-refetch), but the data is stored in [Redux](https://github.com/reactjs/redux).
 
 # Example project and demo
 
@@ -136,7 +136,7 @@ has the following properties:
 
 # Frontend
 
-The `@reflorp` decorator corresponds to the `@connect` decorator from react-refetch.
+The `@reflorp` decorator corresponds to the `@connect` decorator from Refetch.
 
 It takes a function mapping `props` and `context` to entities, and as a second argument an `options` object.
 
@@ -276,10 +276,10 @@ export default class EditNote extends Component {
 }
 ```
 
-## Advanced: Override refetch defaults
+## Advanced: Override Refetch defaults
 
 Refetch has a convenient way to override certain defaults and hook in to internal stuff before and after requests are
-sent. You can do this with Reflorp as well by passing in your own refetch function with the `options` object as the
+sent. You can do this with Reflorp as well by passing in your own `refetch` function with the `options` object as the
 second parameter to the decorator.
 
 ```
@@ -306,10 +306,10 @@ const refetch = connect.defaults({
 
 ## State objects
 
-The state objects `EntityState` and `EntityListState` are the link between your component and react-reflorp. They
+The state objects `EntityState` and `EntityListState` are the link between your component and Reflorp. They
 contain data and metadata about either a single entity, or a list of entities.
 
-We use the excellent `PromiseState` class from react-refetch, which is fully documented
+We use the excellent `PromiseState` class from Refetch, which is fully documented
 [over here](https://github.com/heroku/react-refetch/blob/master/docs/api.md#promisestate).
 
 Both state objects below have these properties of the `data` PromiseState available for easier access:
