@@ -73,10 +73,8 @@ export default {
 
 # Backend
 
-Currently URL:s for fetching things from the backend are automatically generated, and the basic structure can not be
-changed.
-
-URL:s and methods are based on the names of the entities and the kind of request we're doing.
+By default URL:s for fetching things from the backend are automatically generated. URL:s and methods are based on the
+names of the entities and the kind of request we're doing.
 
 ## Single endpoints
 
@@ -104,6 +102,37 @@ the same endpoint but with `?page=2`, and the result is appended to the end of t
 until it receives an empty response.
 
 If an empty page has been received the `EntityListState#hasMore` property is set to `false`.
+
+## Advanced: Customize URL:s
+
+There are two configuration options that can help you here:
+
+- `baseUrl` - `string`: This will basically be appended to the front of all URL:s
+- `getUrl` - `function`: By default Reflorp uses an internal `getUrl` function that will generate REST:y URL:s like in
+the examples, but if you want you can override that function and build your own URL:s.
+
+### Example
+
+A call to `getUrl` might look something like this:
+
+```
+getUrl({
+    entityConfiguration: (se below),
+    id: "1",
+    parentId: false,
+    extra: { page: 2 },
+    flags: ["list"],
+});
+```
+
+The `flags` parameter indicates what kind of request this is (i e single, list, more, update, create, del).
+
+The `entityConfiguration` parameter contains an internal representation of the configuration for the current entity. It
+has the following properties:
+
+- `parentEntity` - `EntityConfiguration`: The configuration for the parent entity, if any
+- `entity` - `string`: The name of this entity type (i e `board`)
+- `plural` - `string`: The plural name of this entity type as configured by you (i e `boards`)
 
 # Frontend
 
