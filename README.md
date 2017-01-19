@@ -273,6 +273,24 @@ export default class EditNote extends Component {
 }
 ```
 
+## Advanced: Override refetch defaults
+
+Refetch has a convenient way to override certain defaults and hook in to internal stuff before and after requests are
+sent. You can do this with Reflorp as well by passing in your own refetch function with the configuration object.
+
+```
+import { connect } from 'react-refetch'
+
+const refetch = connect.defaults({
+  credentials: 'include',
+});
+
+const configuration = {
+  refetch,
+  entities: { ... },
+}
+```
+
 # API
 
 ## State objects
