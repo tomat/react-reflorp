@@ -1,4 +1,4 @@
-import { getUrl as builtinGetUrl } from './utils/getUrl';
+import { default as builtinGetUrl } from './utils/getUrl';
 import getKey from './utils/getKey';
 import create from './refetch/create';
 import list from './refetch/list';
