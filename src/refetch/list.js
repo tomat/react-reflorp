@@ -11,7 +11,7 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
   const dispatch = entityConfiguration.dispatch;
 
   return ({ parentId = false, extra = {} }) => {
-    const url = entityConfiguration.url({ parentId, extra });
+    const url = entityConfiguration.url({ parentId, extra, flags: [ 'list' ] });
     const key = entityConfiguration.listKey({ parentId, extra });
     const pageKey = entityConfiguration.listPageKey({ parentId, extra });
     const extraKey = entityConfiguration.listExtraKey({ parentId, extra });

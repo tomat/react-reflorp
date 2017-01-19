@@ -1,3 +1,6 @@
+/**
+ * @api
+ */
 export default class EntityState {
   constructor({
     data,

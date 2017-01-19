@@ -10,7 +10,7 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
   const dispatch = entityConfiguration.dispatch;
 
   return ({ id, parentId = false, onDel = () => {} }) => {
-    const url = entityConfiguration.url({ id, parentId });
+    const url = entityConfiguration.url({ id, parentId, flags: [ 'del' ] });
     const key = entityConfiguration.singleKey({ id, parentId });
     const draftKey = entityConfiguration.singleKey({ id, parentId });
     const listKey = entityConfiguration.listKey({ parentId });

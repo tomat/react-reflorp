@@ -7,6 +7,9 @@ import single from './refetch/single';
 import update from './refetch/update';
 import del from './refetch/del';
 
+/**
+ * @api
+ */
 export default class EntityConfiguration {
   constructor({
     dispatch,
@@ -23,19 +26,34 @@ export default class EntityConfiguration {
     /** @type string */
     this.baseUrl = baseUrl;
 
-    /** @type string */
+    /**
+     * @type string
+     * @api
+     */
     this.entity = entity;
 
-    /** @type string */
+    /**
+     * @type string
+     * @api
+     */
     this.plural = plural;
 
-    /** @type string */
+    /**
+     * @type string
+     * @api
+     * */
     this.parentEntity = parentEntity;
 
-    /** @type EntityConfiguration */
+    /**
+     * @type EntityConfiguration
+     * @api
+     */
     this.parentConfiguration = parentConfiguration;
 
-    /** @type function */
+    /**
+     * @type function
+     * @api
+     */
     this._getUrl = (typeof getUrl === 'function' ? getUrl : builtinGetUrl);
 
     this.refetch = {
@@ -65,6 +83,7 @@ export default class EntityConfiguration {
     return this.key({
       id,
       parentId,
+      flags: ['single'],
     });
   };
 
@@ -216,7 +235,7 @@ export default class EntityConfiguration {
     return this.key({
       id,
       parentId,
-      flags: [ 'refetch', 'delete' ],
+      flags: [ 'refetch', 'del' ],
     });
   };
 
@@ -227,7 +246,7 @@ export default class EntityConfiguration {
     return this.key({
       id,
       parentId,
-      flags: [ 'refetch', 'delete', 'response' ],
+      flags: [ 'refetch', 'del', 'response' ],
     });
   };
 

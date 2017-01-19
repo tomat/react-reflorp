@@ -11,7 +11,7 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
   const dispatch = entityConfiguration.dispatch;
 
   return ({ id, parentId = false }) => {
-    const url = entityConfiguration.url({ id, parentId });
+    const url = entityConfiguration.url({ id, parentId, flags: [ 'single' ] });
     const key = entityConfiguration.singleKey({ id, parentId });
     const draftKey = entityConfiguration.draftKey({ id, parentId });
     const responseKey = entityConfiguration.refetchSingleResponseKey({ id, parentId });

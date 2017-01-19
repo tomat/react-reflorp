@@ -11,7 +11,7 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
   const dispatch = entityConfiguration.dispatch;
 
   return ({ parentId = false, extra = {} }) => {
-    const key = entityConfiguration.listKey({ parentId, extra });
+    const key = entityConfiguration.listKey({ parentId, extra, flags: [ 'list', 'more' ] });
     const pageKey = entityConfiguration.listPageKey({ parentId, extra });
     const hasMoreKey = entityConfiguration.listHasMoreKey({ parentId, extra });
     const moreKey = entityConfiguration.refetchListMoreKey({ parentId, extra });

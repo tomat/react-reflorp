@@ -11,7 +11,7 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
   const dispatch = entityConfiguration.dispatch;
 
   return ({ parentId = false, onCreate = () => {} }) => {
-    const url = entityConfiguration.url({ parentId });
+    const url = entityConfiguration.url({ parentId, flags: [ 'create' ] });
     const newDraftKey = entityConfiguration.newDraftKey({ parentId });
     const createKey = entityConfiguration.refetchCreateKey({ parentId });
     const createResponseKey = entityConfiguration.refetchCreateResponseKey({ parentId });
