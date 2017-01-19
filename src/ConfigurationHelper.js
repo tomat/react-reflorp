@@ -9,7 +9,6 @@ export const refetchPrefix = 'reflorp';
 export default class ConfigurationHelper {
   constructor(configuration, dispatch) {
     this.dispatch = dispatch;
-    this.baseUrl = configuration.baseUrl;
     this.pluralNames = {};
     this.entities = {};
 
@@ -36,7 +35,8 @@ export default class ConfigurationHelper {
 
       this.entities[name] = new EntityConfiguration({
         dispatch,
-        baseUrl: this.baseUrl,
+        baseUrl: configuration.baseUrl,
+        getUrl: configuration.getUrl,
         entity: name,
         plural: entity.plural || name + 's',
         parentEntity: (entity.parent || null),

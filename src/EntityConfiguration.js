@@ -1,4 +1,4 @@
-import getUrl from './utils/getUrl';
+import { getUrl as builtinGetUrl } from './utils/getUrl';
 import getKey from './utils/getKey';
 import create from './refetch/create';
 import list from './refetch/list';
@@ -15,6 +15,7 @@ export default class EntityConfiguration {
     plural = entity + 's',
     parentEntity = null,
     parentConfiguration = null,
+    getUrl = builtinGetUrl,
   }) {
     /** @type function */
     this.dispatch = dispatch;
@@ -33,6 +34,9 @@ export default class EntityConfiguration {
 
     /** @type EntityConfiguration */
     this.parentConfiguration = parentConfiguration;
+
+    /** @type function */
+    this._getUrl = (typeof getUrl === 'function' ? getUrl : builtinGetUrl);
 
     this.refetch = {
       single: single(this),
@@ -231,7 +235,7 @@ export default class EntityConfiguration {
    * Get URL to list or entity
    */
   url = ({ id = false, parentId = false, extra = {}, flags = [] }) => {
-    return this.baseUrl + getUrl({
+    return this.baseUrl + this._getUrl({
       entityConfiguration: this,
       id,
       parentId,
