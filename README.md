@@ -107,7 +107,7 @@ If an empty page has been received the `EntityListState#hasMore` property is set
 
 There are two configuration options that can help you here:
 
-- `baseUrl` - `string`: This will basically be appended to the front of all URL:s
+- `baseUrl` - `string`: This will basically be prepended to all URL:s, regardless of which `getUrl` function is used
 - `getUrl` - `function`: By default Reflorp uses an internal `getUrl` function that will generate REST:y URL:s like in
 the examples, but if you want you can override that function and build your own URL:s.
 
