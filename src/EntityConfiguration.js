@@ -83,7 +83,7 @@ export default class EntityConfiguration {
     return this.key({
       id,
       parentId,
-      flags: ['single'],
+      flags: [ 'single' ],
     });
   };
 
