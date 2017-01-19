@@ -138,7 +138,7 @@ has the following properties:
 
 The `@reflorp` decorator corresponds to the `@connect` decorator from react-refetch.
 
-It takes a function mapping `props` and `context` to entities.
+It takes a function mapping `props` and `context` to entities, and as a second argument an `options` object.
 
 By default it just injects the available data from the redux store. With `load: true` it will actually go fetch the
 data from the backend, and keep the component informed about that process.
@@ -147,6 +147,9 @@ The actual data and metadata is enclosed inside the `EntityState` and `EntityLis
 described further down.
 
 ## Loading and displaying
+
+Passing `hideUntilLoaded: true` in the `options` object will wait for both loads to complete before the wrapped
+component is mounted.
 
 ```javascript
 // Board.js
@@ -157,7 +160,7 @@ import { reflorp, EntityState, EntityListState } from 'react-reflorp';
 @reflorp(({ id }) => ({
   board: { id, load: true },           // fetch the board data: GET /api/boards/${id}
   notes: { parentId: id, load: true }, // fetch the notes belonging to this board: GET /api/boards/${id}/notes
-}))
+}), { hideUntilLoaded: true })
 export default class Board extends Component {
   static propTypes = {
     board: PropTypes.instanceOf(EntityState),
@@ -276,19 +279,27 @@ export default class EditNote extends Component {
 ## Advanced: Override refetch defaults
 
 Refetch has a convenient way to override certain defaults and hook in to internal stuff before and after requests are
-sent. You can do this with Reflorp as well by passing in your own refetch function with the configuration object.
+sent. You can do this with Reflorp as well by passing in your own refetch function with the `options` object as the
+second parameter to the decorator.
 
 ```
-import { connect } from 'react-refetch'
+import { connect } from 'react-refetch';
+import { reflorp } from 'react-reflorp';
 
 const refetch = connect.defaults({
   credentials: 'include',
 });
 
-const configuration = {
-  refetch,
-  entities: { ... },
-}
+@reflorp(
+  ({ id }) => ({
+    board: { id, load: true },
+    notes: { parentId: id, load: true },
+  }),
+  {
+    refetch,
+    hideUntilLoaded: true,
+  }
+)
 ```
 
 # API
