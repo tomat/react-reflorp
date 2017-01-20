@@ -71,69 +71,6 @@ export default {
 };
 ```
 
-# Backend
-
-By default URL:s for fetching things from the backend are automatically generated. URL:s and methods are based on the
-names of the entities and the kind of request we're doing.
-
-## Single endpoints
-
-Single board with id 1: `/boards/1`
-
-Single note with id 2 belonging to board with id 1: `/boards/1/notes/2`
-
-When `PATCH`:ing or `GET`:ing, single-endpoints should always return only the object requested.
-
-Deleting an entity results in a `DELETE` to the single-endpoint.
-
-## List endpoints
-
-List of boards, and used for creating new boards: `/boards`
-
-List of notes belonging to board with id 1, and used for creating new notes on that board: `/boards/1/notes`
-
-Creating a new entity results in a `POST` to the corresponding list collection (creating a new board will `POST` to
-`/boards`), that should return the created object only.
-
-### Pagination
-
-There is built-in rudimentary support for pagination, if you call `EntityListState#more()` a new `GET` will be sent to
-the same endpoint but with `?page=2`, and the result is appended to the end of the list. The page number is incremented
-until it receives an empty response.
-
-If an empty page has been received the `EntityListState#hasMore` property is set to `false`.
-
-## Advanced: Customize URL:s
-
-There are two configuration options that can help you here:
-
-- `baseUrl` - `string`: This will basically be prepended to all URL:s, regardless of which `getUrl` function is used
-- `getUrl` - `function`: By default Reflorp uses an internal `getUrl` function that will generate REST:y URL:s like in
-the examples, but if you want you can override that function and build your own URL:s.
-
-### Example
-
-A call to `getUrl` might look something like this:
-
-```
-getUrl({
-    entityConfiguration: (se below),
-    id: "1",
-    parentId: false,
-    extra: { page: 2 },
-    flags: ["list"],
-});
-```
-
-The `flags` parameter indicates what kind of request this is (i e single, list, more, update, create, del).
-
-The `entityConfiguration` parameter contains an internal representation of the configuration for the current entity. It
-has the following properties:
-
-- `parentEntity` - `EntityConfiguration`: The configuration for the parent entity, if any
-- `entity` - `string`: The name of this entity type (i e `board`)
-- `plural` - `string`: The plural name of this entity type as configured by you (i e `boards`)
-
 # Frontend
 
 The `@reflorp` decorator corresponds to the `@connect` decorator from Refetch.
@@ -363,6 +300,64 @@ It has the following properties:
 
 And the following functions:
 - `more()`: fetches additional data from the backend, see [Pagination.](#pagination)
+
+# Backend
+
+By default, URL:s for fetching and changing things are automatically generated. URL:s and methods are based on the names
+of the entities and the type of request we're doing.
+
+| Type   | Method | URL               | Response | Description                                                                                |
+|--------|--------|-------------------|----------|--------------------------------------------------------------------------------------------|
+| create | POST   | /boards           | object   | Creates a new entity                                                                       |
+| list   | GET    | /boards           | object[] | Returns a list of entities                                                                 |
+| more   | GET    | /boards?page=2    | object[] | Returns the second page of a list of entities                                              |
+| single | GET    | /boards/1         | object   | Returns a single entity                                                                    |
+| update | PATCH  | /boards/1         | object   | Updates a single entity, returns the same entity with changes                              |
+| del    | DELETE | /boards/1         | -        | Deletes a single entity                                                                    |
+| create | POST   | /boards/1/notes   | object   | Creates a new entity belonging to a parent entity                                          |
+| list   | GET    | /boards/1/notes   | object[] | Returns a list of entities belonging to a parent entity                                    |
+| single | GET    | /boards/1/notes/2 | object   | Returns a single entity with a parent entity                                               |
+| update | PATCH  | /boards/1/notes/2 | object   | Updates a single entity belonging to a parent entity, returns the same entity with changes |
+| del    | DELETE | /boards/1/notes/2 | -        | Deletes a single entity belonging to a parent entity                                       |
+
+### Pagination
+
+There is built-in rudimentary support for pagination, if you call `EntityListState#more()` a new `GET` will be sent to
+the same endpoint but with `?page=2`, and the result is appended to the end of the list. The page number is incremented
+until it receives an empty response.
+
+If an empty page has been received the `EntityListState#hasMore` property is set to `false`.
+
+## Advanced: Customize URL:s
+
+There are two configuration options that can help you here:
+
+- `baseUrl` - `string`: This will basically be prepended to all URL:s, regardless of which `getUrl` function is used
+- `getUrl` - `function`: By default Reflorp uses an internal `getUrl` function that will generate REST:y URL:s like in
+the examples, but if you want you can override that function and build your own URL:s.
+
+### Example
+
+A call to `getUrl` might look something like this:
+
+```
+getUrl({
+    entityConfiguration: (se below),
+    id: "1",
+    parentId: false,
+    extra: { page: 2 },
+    flags: ["list"],
+});
+```
+
+The `flags` parameter indicates what kind of request this is (i e single, list, more, update, create, del).
+
+The `entityConfiguration` parameter contains an internal representation of the configuration for the current entity. It
+has the following properties:
+
+- `parentEntity` - `EntityConfiguration`: The configuration for the parent entity, if any
+- `entity` - `string`: The name of this entity type (i e `board`)
+- `plural` - `string`: The plural name of this entity type as configured by you (i e `boards`)
 
 # Support
 
