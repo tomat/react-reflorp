@@ -78,9 +78,9 @@ names of the entities and the kind of request we're doing.
 
 ## Single endpoints
 
-Single board with id 1: `/board/1`
+Single board with id 1: `/boards/1`
 
-Single note with id 2 belonging to board with id 1: `/board/1/notes/2`
+Single note with id 2 belonging to board with id 1: `/boards/1/notes/2`
 
 When `PATCH`:ing or `GET`:ing, single-endpoints should always return only the object requested.
 
@@ -90,7 +90,7 @@ Deleting an entity results in a `DELETE` to the single-endpoint.
 
 List of boards, and used for creating new boards: `/boards`
 
-List of notes belonging to board with id 1, and used for creating new notes on that board: `/board/1/notes`
+List of notes belonging to board with id 1, and used for creating new notes on that board: `/boards/1/notes`
 
 Creating a new entity results in a `POST` to the corresponding list collection (creating a new board will `POST` to
 `/boards`), that should return the created object only.
