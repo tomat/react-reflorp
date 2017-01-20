@@ -306,19 +306,19 @@ And the following functions:
 By default, URL:s for fetching and changing things are automatically generated. URL:s and methods are based on the names
 of the entities and the type of request we're doing.
 
-| Type   | Method | URL               | Response | Description                                                                                |
-|--------|--------|-------------------|----------|--------------------------------------------------------------------------------------------|
-| create | POST   | /boards           | object   | Creates a new entity                                                                       |
-| list   | GET    | /boards           | object[] | Returns a list of entities                                                                 |
-| more   | GET    | /boards?page=2    | object[] | Returns the second page of a list of entities                                              |
-| single | GET    | /boards/1         | object   | Returns a single entity                                                                    |
-| update | PATCH  | /boards/1         | object   | Updates a single entity, returns the same entity with changes                              |
-| del    | DELETE | /boards/1         | -        | Deletes a single entity                                                                    |
-| create | POST   | /boards/1/notes   | object   | Creates a new entity belonging to a parent entity                                          |
-| list   | GET    | /boards/1/notes   | object[] | Returns a list of entities belonging to a parent entity                                    |
-| single | GET    | /boards/1/notes/2 | object   | Returns a single entity with a parent entity                                               |
-| update | PATCH  | /boards/1/notes/2 | object   | Updates a single entity belonging to a parent entity, returns the same entity with changes |
-| del    | DELETE | /boards/1/notes/2 | -        | Deletes a single entity belonging to a parent entity                                       |
+| Method | URL               | Response | Description                                                                                | Type   |
+|--------|-------------------|----------|--------------------------------------------------------------------------------------------|--------|
+| POST   | /boards           | object   | Creates a new entity                                                                       | create |
+| GET    | /boards           | object[] | Returns a list of entities                                                                 | list   |
+| GET    | /boards?page=2    | object[] | Returns the second page of a list of entities                                              | more   |
+| GET    | /boards/1         | object   | Returns a single entity                                                                    | single |
+| PATCH  | /boards/1         | object   | Updates a single entity, returns the same entity with changes                              | update |
+| DELETE | /boards/1         | -        | Deletes a single entity                                                                    | del    |
+| POST   | /boards/1/notes   | object   | Creates a new entity belonging to a parent entity                                          | create |
+| GET    | /boards/1/notes   | object[] | Returns a list of entities belonging to a parent entity                                    | list   |
+| GET    | /boards/1/notes/2 | object   | Returns a single entity with a parent entity                                               | single |
+| PATCH  | /boards/1/notes/2 | object   | Updates a single entity belonging to a parent entity, returns the same entity with changes | update |
+| DELETE | /boards/1/notes/2 | -        | Deletes a single entity belonging to a parent entity                                       | del    |
 
 ### Pagination
 
@@ -350,7 +350,7 @@ getUrl({
 });
 ```
 
-The `flags` parameter indicates what kind of request this is (i e single, list, more, update, create, del).
+The `flags` parameter indicates what type of request this is (i e single, list, more, update, create, del).
 
 The `entityConfiguration` parameter contains an internal representation of the configuration for the current entity. It
 has the following properties:
