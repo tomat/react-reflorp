@@ -101,10 +101,10 @@ export default class EntityConfiguration {
   /*
    * Stores a list of entities
    */
-  listKey = ({ parentId = false, extra = {} }) => {
+  listKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
+      query,
       flags: [ 'list' ],
     });
   };
@@ -112,32 +112,32 @@ export default class EntityConfiguration {
   /*
    * Stores the latest page fetched for a list of entities
    */
-  listPageKey = ({ parentId = false, extra = {} }) => {
+  listPageKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
+      query,
       flags: [ 'list', 'page' ],
     });
   };
 
   /*
-   * Stores the extra filters for a list of entities
+   * Stores the query filters for a list of entities
    */
-  listExtraKey = ({ parentId = false, extra = {} }) => {
+  listQueryKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
-      flags: [ 'list', 'extra' ],
+      query,
+      flags: [ 'list', 'query' ],
     });
   };
 
   /*
    * Stores the more flag for a list of entities
    */
-  listHasMoreKey = ({ parentId = false, extra = {} }) => {
+  listHasMoreKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
+      query,
       flags: [ 'list', 'hasMore' ],
     });
   };
@@ -156,10 +156,10 @@ export default class EntityConfiguration {
   /*
    * Refetch key for the response to fetching a list of entities
    */
-  refetchListResponseKey = ({ parentId = false, extra = {} }) => {
+  refetchListResponseKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
+      query,
       flags: [ 'refetch', 'list' ],
     });
   };
@@ -167,10 +167,10 @@ export default class EntityConfiguration {
   /*
    * Refetch key for the function that fetches the next page in a list of entities
    */
-  refetchListMoreKey = ({ parentId = false, extra = {} }) => {
+  refetchListMoreKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
+      query,
       flags: [ 'refetch', 'list', 'more' ],
     });
   };
@@ -178,10 +178,10 @@ export default class EntityConfiguration {
   /*
    * Refetch key for the response to fetching the next page in a list of entities
    */
-  refetchListMoreResponseKey = ({ parentId = false, extra = {} }) => {
+  refetchListMoreResponseKey = ({ parentId = false, query = {} }) => {
     return this.key({
       parentId,
-      extra,
+      query,
       flags: [ 'refetch', 'list', 'more' ],
     });
   };
@@ -253,12 +253,12 @@ export default class EntityConfiguration {
   /*
    * Get URL to list or entity
    */
-  url = ({ id = false, parentId = false, extra = {}, flags = [] }) => {
+  url = ({ id = false, parentId = false, query = {}, flags = [] }) => {
     return this.baseUrl + this._getUrl({
       entityConfiguration: this,
       id,
       parentId,
-      extra,
+      query,
       flags,
     });
   };
@@ -266,12 +266,12 @@ export default class EntityConfiguration {
   /*
    * Get storage key for list or entity
    */
-  key = ({ id = false, parentId = false, extra = {}, flags = [] }) => {
+  key = ({ id = false, parentId = false, query = {}, flags = [] }) => {
     return getKey({
       entityConfiguration: this,
       id,
       parentId,
-      extra,
+      query,
       flags,
     });
   };

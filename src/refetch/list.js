@@ -10,13 +10,13 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
 
   const dispatch = entityConfiguration.dispatch;
 
-  return ({ parentId = false, extra = {} }) => {
-    const url = entityConfiguration.url({ parentId, extra, flags: [ 'list' ] });
-    const key = entityConfiguration.listKey({ parentId, extra });
-    const pageKey = entityConfiguration.listPageKey({ parentId, extra });
-    const extraKey = entityConfiguration.listExtraKey({ parentId, extra });
-    const hasMoreKey = entityConfiguration.listHasMoreKey({ parentId, extra });
-    const responseKey = entityConfiguration.refetchListResponseKey({ parentId, extra });
+  return ({ parentId = false, query = {} }) => {
+    const url = entityConfiguration.url({ parentId, query, flags: [ 'list' ] });
+    const key = entityConfiguration.listKey({ parentId, query });
+    const pageKey = entityConfiguration.listPageKey({ parentId, query });
+    const queryKey = entityConfiguration.listQueryKey({ parentId, query });
+    const hasMoreKey = entityConfiguration.listHasMoreKey({ parentId, query });
+    const responseKey = entityConfiguration.refetchListResponseKey({ parentId, query });
 
     return {
       [responseKey]: {
@@ -26,7 +26,7 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
         buildRequest: (mapping) => {
           dispatch(create(key, PromiseState.create()));
           dispatch(update(pageKey, 1));
-          dispatch(update(extraKey, extra || {}));
+          dispatch(update(queryKey, query || {}));
           dispatch(update(hasMoreKey, true));
 
           return buildRequest(mapping);

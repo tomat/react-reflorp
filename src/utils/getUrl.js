@@ -1,4 +1,4 @@
-const getUrl = ({ entityConfiguration, id = false, parentId = false, extra = {} }) => {
+const getUrl = ({ entityConfiguration, id = false, parentId = false, query = {} }) => {
   const entity = entityConfiguration.entity;
 
   let url = '';
@@ -10,7 +10,7 @@ const getUrl = ({ entityConfiguration, id = false, parentId = false, extra = {} 
       entity: entityConfiguration.parentEntity,
       id: parentId,
       parentId: false,
-      extra: {},
+      query: {},
     });
   }
 
@@ -26,10 +26,10 @@ const getUrl = ({ entityConfiguration, id = false, parentId = false, extra = {} 
     url += `/${id}`;
   }
 
-  if (Object.keys(extra).length > 0) {
+  if (Object.keys(query).length > 0) {
     url += '?';
-    Object.keys(extra).forEach((k) => {
-      url += `${k}=${extra[k]}&`;
+    Object.keys(query).forEach((k) => {
+      url += `${k}=${query[k]}&`;
     });
   }
 

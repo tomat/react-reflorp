@@ -10,16 +10,16 @@ export default (/** @type EntityConfiguration */ entityConfiguration) => {
 
   const dispatch = entityConfiguration.dispatch;
 
-  return ({ parentId = false, extra = {} }) => {
-    const key = entityConfiguration.listKey({ parentId, extra, flags: [ 'list', 'more' ] });
-    const pageKey = entityConfiguration.listPageKey({ parentId, extra });
-    const hasMoreKey = entityConfiguration.listHasMoreKey({ parentId, extra });
-    const moreKey = entityConfiguration.refetchListMoreKey({ parentId, extra });
-    const moreResponseKey = entityConfiguration.refetchListMoreResponseKey({ parentId, extra });
+  return ({ parentId = false, query = {} }) => {
+    const key = entityConfiguration.listKey({ parentId, query, flags: [ 'list' ] });
+    const pageKey = entityConfiguration.listPageKey({ parentId, query });
+    const hasMoreKey = entityConfiguration.listHasMoreKey({ parentId, query });
+    const moreKey = entityConfiguration.refetchListMoreKey({ parentId, query });
+    const moreResponseKey = entityConfiguration.refetchListMoreResponseKey({ parentId, query });
 
     return {
       [moreKey]: (page) => {
-        const url = entityConfiguration.url({ parentId, extra: { ...extra, page } });
+        const url = entityConfiguration.url({ parentId, query: { ...query, page } });
 
         return {
           [moreResponseKey]: {

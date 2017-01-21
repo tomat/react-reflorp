@@ -6,7 +6,7 @@ export default class EntityListState {
     data,
     entity,
     parentId = false,
-    extra = {},
+    query = {},
     dispatch,
     hasMore = true,
     onMore = () => {},
@@ -22,7 +22,7 @@ export default class EntityListState {
     this.parentId = parentId;
 
     /** @type object */
-    this.extra = extra;
+    this.query = query;
 
     /** @type function */
     this.dispatch = dispatch;

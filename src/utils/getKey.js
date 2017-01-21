@@ -1,4 +1,4 @@
-const getKey = ({ entityConfiguration, id = false, parentId = false, extra = {}, flags = [] }) => {
+const getKey = ({ entityConfiguration, id = false, parentId = false, query = {}, flags = [] }) => {
   const entity = entityConfiguration.entity;
 
   let key = '';
@@ -25,10 +25,10 @@ const getKey = ({ entityConfiguration, id = false, parentId = false, extra = {},
     key += `/${id}`;
   }
 
-  if (Object.keys(extra).length > 0) {
+  if (Object.keys(query).length > 0) {
     key += '?';
-    Object.keys(extra).forEach((k) => {
-      key += `${k}=${extra[k]}&`;
+    Object.keys(query).forEach((k) => {
+      key += `${k}=${query[k]}&`;
     });
   }
 

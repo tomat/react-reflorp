@@ -90,7 +90,7 @@ export default class ConfigurationHelper {
        */
       const listRefetch = entityConfiguration.refetch.list({
         parentId: options.parentId || false,
-        extra: options.extra || {},
+        query: options.query || {},
       });
 
       fetches = {
@@ -103,7 +103,7 @@ export default class ConfigurationHelper {
        */
       const listMoreRefetch = entityConfiguration.refetch.more({
         parentId: options.parentId || false,
-        extra: options.extra || {},
+        query: options.query || {},
       });
 
       fetches = {
@@ -199,15 +199,15 @@ export default class ConfigurationHelper {
       /**
        * Entity list
        */
-      const listKey = entityConfiguration.listKey({ parentId, extra: options.extra });
-      const listPageKey = entityConfiguration.listPageKey({ parentId, extra: options.extra });
-      const listHasMoreKey = entityConfiguration.listHasMoreKey({ parentId, extra: options.extra });
-      const refetchListMoreKey = refetchPrefix + entityConfiguration.refetchListMoreKey({ parentId, extra: options.extra });
+      const listKey = entityConfiguration.listKey({ parentId, query: options.query });
+      const listPageKey = entityConfiguration.listPageKey({ parentId, query: options.query });
+      const listHasMoreKey = entityConfiguration.listHasMoreKey({ parentId, query: options.query });
+      const refetchListMoreKey = refetchPrefix + entityConfiguration.refetchListMoreKey({ parentId, query: options.query });
 
       return new EntityListState({
         entity: name,
         parentId,
-        extra: options.extra || {},
+        query: options.query || {},
         data: state[listKey] || null,
         hasMore: state[listHasMoreKey],
         _then: options.then,
