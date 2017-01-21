@@ -7,6 +7,16 @@ Basically a simple ORM using [Refetch](https://github.com/heroku/react-refetch),
 
 An example project can be found [here](https://github.com/tomat/reflorp), and the latest build of it should be live at http://reflorp.com
 
+# Installation
+
+Requires **React 0.14 or later** and [react-redux](https://github.com/reactjs/react-redux).
+
+```
+npm install --save react-reflorp
+```
+
+This assumes that you’re using [npm](http://npmjs.com/) package manager with a module bundler like [Webpack](http://webpack.github.io) or [Browserify](http://browserify.org/) to consume [CommonJS modules](http://webpack.github.io/docs/commonjs.html).
+
 # Basic example
 
 In the example code throughout this README we have a simple app with boards and notes. Each board has a number of notes,
@@ -14,13 +24,26 @@ and each note belongs to a single board. Both notes and boards have a unique `id
 (string) property, and notes have a `summary` (string) property.
 
 ```javascript
-// Board.js
+// app.js
+const configuration = {
+  entities: {
+    board: {
+      plural: 'boards',
+    },
+    note: {
+      parent: 'board',
+      plural: 'notes',
+    },
+  },
+  baseUrl: '/api', // is prepended to all URL:s
+};
+```
 
-import React, { PropTypes, Component } from 'react';
+```javascript
+// Board.js
 import { reflorp, EntityState, EntityListState } from 'react-reflorp';
 
 @reflorp(({ id }) => ({
-  // fetch the board data: GET /api/boards/${id}
   board: { id, load: true },
 }))
 export default class Board extends Component {
@@ -45,16 +68,6 @@ export default class Board extends Component {
 }
 ```
 
-# Installation
-
-Requires **React 0.14 or later** and [react-redux](https://github.com/reactjs/react-redux).
-
-```
-npm install --save react-reflorp
-```
-
-This assumes that you’re using [npm](http://npmjs.com/) package manager with a module bundler like [Webpack](http://webpack.github.io) or [Browserify](http://browserify.org/) to consume [CommonJS modules](http://webpack.github.io/docs/commonjs.html).
-
 # Setup
 
 First, add the `Container` with a configuration object as a child of the react-redux `Provider`:
@@ -63,8 +76,6 @@ First, add the `Container` with a configuration object as a child of the react-r
 // app.js
 
 import { Container as ReflorpContainer } from 'react-reflorp';
-
-[...]
 
 const configuration = {
   entities: {
@@ -113,7 +124,7 @@ from the backend, and keep the component informed about that process.
 The actual data and metadata is enclosed inside the `EntityState` and `EntityListState` abstractions, which are
 described further down.
 
-## Loading and displaying: full example
+## Example: Loading and displaying
 
 ```javascript
 // Board.js
@@ -163,7 +174,7 @@ export default class Board extends Component {
 }
 ```
 
-## Creating
+## Example: Creating
 
 ```javascript
 // CreateBoard.js
@@ -199,7 +210,7 @@ export default class CreateBoard extends Component {
 }
 ```
 
-## Editing and deleting
+## Example: Editing and deleting
 
 ```javascript
 // EditNote.js
@@ -314,7 +325,7 @@ we're in edit or create mode) to the backend
 - `handleChange()`: helper function that updates fields in the draft according to the `name` attribute of the `input`
 field it is called from
   - `<input onChange={note.handleChange} name="summary">` will keep the `summary` field of the `note` draft updated
-  when the input value is changed, see the [Editing and deleting](#editing-and-deleting) example above.
+  when the input value is changed, see the [Editing and deleting](#example-editing-and-deleting) example above.
 
 ### EntityListState
 
