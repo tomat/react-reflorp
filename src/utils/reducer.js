@@ -63,46 +63,6 @@ const reducer = (state = {}, action) => {
       }
 
       return state;
-    case prefix + 'UPDATE_ALL_LISTS':
-      if (typeof action.data !== 'undefined') {
-        const newState = extend(false, {}, state);
-        const { entityName, id, parentId, data } = action;
-
-        Object.keys(state).forEach((hash) => {
-          if (newState[hash] && newState[hash].value && newState[hash].value.map) {
-            const parentMatch = (parentId && hash.match(new RegExp('^' + entityName + '\-list\-' + parentId + '\-')));
-            const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
-
-            if (parentMatch || regularMatch) {
-              const extra = newState[`${hash}Extra`];
-              const newValue = newState[hash].value.map((item) => {
-                if (item.id === id) {
-                  let match = true;
-                  Object.keys(extra).forEach((e) => {
-                    if (typeof data[e] !== 'undefined' && extra[e] != data[e]) {
-                      match = false;
-                    }
-                  });
-
-                  if (match) {
-                    return data;
-                  }
-
-                  return false;
-                }
-
-                return item;
-              }).filter((item) => item !== false);
-
-              newState[hash] = PromiseState.resolve(newValue, newState[hash].meta);
-            }
-          }
-        });
-
-        return newState;
-      }
-
-      return state;
     case prefix + 'APPEND_LIST':
       if (typeof action.data !== 'undefined') {
         const newState = extend(false, {}, state);
@@ -151,46 +111,6 @@ const reducer = (state = {}, action) => {
 
           return newState;
         }
-      }
-
-      return state;
-    case prefix + 'APPEND_ALL_LISTS':
-      if (typeof action.data !== 'undefined') {
-        const newState = extend(false, {}, state);
-        const { entityName, parentId, data } = action;
-
-        Object.keys(state).forEach((hash) => {
-          if (newState[hash] && newState[hash].value && newState[hash].value.map) {
-            const parentMatch = (parentId && hash.match(new RegExp('^' + entityName + '\-list\-' + parentId + '\-')));
-            const regularMatch = (!parentId && hash.match(new RegExp('^' + entityName + '\-list\-')));
-
-            if (parentMatch || regularMatch) {
-              const extra = newState[`${hash}Extra`];
-              const done = [];
-              const newValue = newState[hash].value.concat(data).filter((item) => {
-                if (done.indexOf(item.id) === -1) {
-                  let match = true;
-                  Object.keys(extra).forEach((e) => {
-                    if (typeof item[e] !== 'undefined' && extra[e] != item[e]) {
-                      match = false;
-                    }
-                  });
-                  if (match) {
-                    done.push(item.id);
-
-                    return true;
-                  }
-                }
-
-                return false;
-              });
-
-              newState[hash] = PromiseState.resolve(newValue, newState[hash].meta);
-            }
-          }
-        });
-
-        return newState;
       }
 
       return state;
@@ -271,14 +191,6 @@ export const update = (name, data) => ({
   data,
 });
 
-export const updateAllLists = (entityName, id, parentId, data) => ({
-  type: prefix + 'UPDATE_ALL_LISTS',
-  entityName,
-  id,
-  parentId,
-  data,
-});
-
 export const updateMulti = (data) => ({
   type: prefix + 'UPDATE_MULTI',
   data,
@@ -305,13 +217,6 @@ export const removeFromList = (name, id) => ({
   type: prefix + 'REMOVE_FROM_LIST',
   name,
   id,
-});
-
-export const appendAllLists = (entityName, parentId, data) => ({
-  type: prefix + 'APPEND_ALL_LISTS',
-  entityName,
-  parentId,
-  data,
 });
 
 export const refreshing = (name) => ({
