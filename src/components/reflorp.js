@@ -55,9 +55,9 @@ export default (mapPropsToEntities, additionalOptions = {}) => {
       getFreshState = (props) => {
         const { reflorp, dispatch, ...realProps } = props;
         const newState = {};
-        const fetchOptions = finalMapPropsToEntities(realProps, this.context);
+        const florpOptions = finalMapPropsToEntities(realProps, this.context);
 
-        Object.keys(fetchOptions).forEach((k) => {
+        Object.keys(florpOptions).forEach((k) => {
           const fetches = {};
 
           Object.keys(realProps).forEach((p) => {
@@ -66,7 +66,7 @@ export default (mapPropsToEntities, additionalOptions = {}) => {
             }
           });
 
-          const entityState = this.helper.getEntityState(k, fetchOptions[k], fetches, reflorp);
+          const entityState = this.helper.getEntityState(k, florpOptions[k], fetches, reflorp);
           entityState.dispatch = dispatch;
           newState[k] = entityState;
         });
