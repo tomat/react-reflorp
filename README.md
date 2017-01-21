@@ -44,6 +44,7 @@ const configuration = {
 import { reflorp, EntityState, EntityListState } from 'react-reflorp';
 
 @reflorp(({ id }) => ({
+  // fetch the board data: GET /api/boards/${id}
   board: { id, load: true },
 }))
 export default class Board extends Component {
