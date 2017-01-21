@@ -95,11 +95,19 @@ import React, { PropTypes, Component } from 'react';
 import { reflorp, EntityState, EntityListState } from 'react-reflorp';
 
 @reflorp(({ id }) => ({
-  board: { id, load: true },           // fetch the board data: GET /api/boards/${id}
-  notes: { parentId: id, load: true }, // fetch the notes belonging to this board: GET /api/boards/${id}/notes
+  // fetch the board data: GET /api/boards/${id}
+  board: { id, load: true },
+  // fetch the notes belonging to this board: GET /api/boards/${id}/notes
+  notes: {
+    parentId: id,
+    load: true,
+    // Sorts the notes.value property by id before they are sent to our component
+    then: (notes) => (notes || null) && notes.sort((note1, note2) => note1.id > note2.id),
+  },
 }), { hideUntilLoaded: true })
 export default class Board extends Component {
   static propTypes = {
+    id: PropTypes.string,
     board: PropTypes.instanceOf(EntityState),
     notes: PropTypes.instanceOf(EntityListState),
   };
@@ -185,6 +193,8 @@ import { reflorp, EntityState } from 'react-reflorp';
 }))
 export default class EditNote extends Component {
   static propTypes = {
+    noteId: PropTypes.string,
+    boardId: PropTypes.string,
     note: PropTypes.instanceOf(EntityState),
   };
 
@@ -310,7 +320,7 @@ of the entities and the type of request we're doing.
 |--------|-------------------|----------|--------------------------------------------------------------------------------------------|--------|
 | POST   | /boards           | object   | Creates a new entity                                                                       | create |
 | GET    | /boards           | object[] | Returns a list of entities                                                                 | list   |
-| GET    | /boards?page=2    | object[] | Returns the second page of a list of entities                                              | more   |
+| GET    | /boards?page=2    | object[] | Returns the second page of a list of entities                                              | list   |
 | GET    | /boards/1         | object   | Returns a single entity                                                                    | single |
 | PATCH  | /boards/1         | object   | Updates a single entity, returns the same entity with changes                              | update |
 | DELETE | /boards/1         | -        | Deletes a single entity                                                                    | del    |
@@ -345,12 +355,15 @@ getUrl({
     entityConfiguration: (se below),
     id: "1",
     parentId: false,
-    extra: { page: 2 },
+    query: { page: 2 },
     flags: ["list"],
 });
 ```
 
-The `flags` parameter indicates what type of request this is (i e single, list, more, update, create, del).
+The `flags` parameter indicates what type of request this is (see the Type column under [Backend](#backend)).
+
+The `query` parameter contains the additional filtering that should be sent (by default they are sent in the query part
+of the URL).
 
 The `entityConfiguration` parameter contains an internal representation of the configuration for the current entity. It
 has the following properties:
