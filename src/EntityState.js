@@ -13,6 +13,7 @@ export default class EntityState {
     onSave = () => {},
     onEdit = () => {},
     onDel = () => {},
+    _then = (v) => v,
   }) {
     /** @type PromiseState */
     this.data = data;
@@ -57,7 +58,7 @@ export default class EntityState {
     this.reason = this.data && this.data.reason;
 
     /** @type object */
-    this.value = this.data && this.data.value;
+    this.value = this.data && this.data.value && _then(this.data.value);
 
     /** @type string|bool */
     this.error = (

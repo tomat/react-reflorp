@@ -10,6 +10,7 @@ export default class EntityListState {
     dispatch,
     hasMore = true,
     onMore = () => {},
+    _then = (v) => v,
   }) {
     /** @type PromiseState */
     this.data = data;
@@ -49,6 +50,9 @@ export default class EntityListState {
 
     /** @type object */
     this.value = this.data && this.data.value;
+
+    /** @type object */
+    this.value = this.data && this.data.value && _then(this.data.value);
 
     /** @type string|bool */
     this.error = (

@@ -29,7 +29,7 @@ export default class ConfigurationHelper {
         if (!this.pluralNames[name + 's']) {
           this.pluralNames[name + 's'] = name;
         } else {
-          throw 'wat';
+          throw `Invalid configuration: Entity "${name}" has non-existing parent`;
         }
       }
 
@@ -187,6 +187,7 @@ export default class ConfigurationHelper {
         dirty: false,
         data: state[draftKey] || null,
         draft: state[draftKey] || {},
+        _then: options.then,
         onSave: (data) => {
           fetches[createKey](data);
         },
@@ -209,6 +210,7 @@ export default class ConfigurationHelper {
         extra: options.extra || {},
         data: state[listKey] || null,
         hasMore: state[listHasMoreKey],
+        _then: options.then,
         onMore: () => {
           fetches[refetchListMoreKey](state[listPageKey] + 1);
         },
@@ -230,6 +232,7 @@ export default class ConfigurationHelper {
         dirty: false,
         data: state[key] || null,
         draft: state[draftKey] || state[key] || null,
+        _then: options.then,
         onDel: (_then = () => {}, _catch = () => {}) => {
           fetches[delKey]({ then: _then, catch: _catch });
         },
