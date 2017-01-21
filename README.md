@@ -7,6 +7,44 @@ Basically a simple ORM using [Refetch](https://github.com/heroku/react-refetch),
 
 An example project can be found [here](https://github.com/tomat/reflorp), and the latest build of it should be live at http://reflorp.com
 
+# Basic example
+
+In the example code throughout this README we have a simple app with boards and notes. Each board has a number of notes,
+and each note belongs to a single board. Both notes and boards have a unique `id` property, boards have a `title`
+(string) property, and notes have a `summary` (string) property.
+
+```javascript
+// Board.js
+
+import React, { PropTypes, Component } from 'react';
+import { reflorp, EntityState, EntityListState } from 'react-reflorp';
+
+@reflorp(({ id }) => ({
+  // fetch the board data: GET /api/boards/${id}
+  board: { id, load: true },
+}))
+export default class Board extends Component {
+  static propTypes = {
+    id: PropTypes.string,
+    board: PropTypes.instanceOf(EntityState),
+  };
+
+  render() {
+    const { board } = this.props;
+
+    if (board.pending) {
+      return <div>Loading...</div>;
+    }
+
+    return (
+      <div>
+        <h1>{board.value.title}</h1>
+      </div>
+    );
+  }
+}
+```
+
 # Installation
 
 Requires **React 0.14 or later** and [react-redux](https://github.com/reactjs/react-redux).
@@ -18,14 +56,6 @@ npm install --save react-reflorp
 This assumes that you’re using [npm](http://npmjs.com/) package manager with a module bundler like [Webpack](http://webpack.github.io) or [Browserify](http://browserify.org/) to consume [CommonJS modules](http://webpack.github.io/docs/commonjs.html).
 
 # Setup
-
-In the following example code we have a simple app with boards and notes. Each board has a number of notes.
-
-We currently only support two level of entities, and an entity can not have multiple parents.
-
-Boards have a single text field: `title`.
-
-Notes also have a single text field: `summary`.
 
 First, add the `Container` with a configuration object as a child of the react-redux `Provider`:
 
@@ -77,16 +107,13 @@ The `@reflorp` decorator corresponds to the `@connect` decorator from Refetch.
 
 It takes a function mapping `props` and `context` to entities, and as a second argument an `options` object.
 
-By default it just injects the available data from the redux store. With `load: true` it will actually go fetch the
-data from the backend, and keep the component informed about that process.
+By default it just injects the available data from the redux store. With `load: true` it will actually go fetch the data
+from the backend, and keep the component informed about that process.
  
 The actual data and metadata is enclosed inside the `EntityState` and `EntityListState` abstractions, which are
 described further down.
 
-## Loading and displaying
-
-Passing `hideUntilLoaded: true` in the `options` object will wait for both loads to complete before the wrapped
-component is mounted.
+## Loading and displaying: full example
 
 ```javascript
 // Board.js
@@ -223,43 +250,36 @@ export default class EditNote extends Component {
 }
 ```
 
-## Advanced: Override Refetch defaults
-
-Refetch has a convenient way to override certain defaults and hook in to internal stuff before and after requests are
-sent. You can do this with Reflorp as well by passing in your own `refetch` function with the `options` object as the
-second parameter to the decorator.
-
-```
-import { connect } from 'react-refetch';
-import { reflorp } from 'react-reflorp';
-
-const refetch = connect.defaults({
-  credentials: 'include',
-});
-
-@reflorp(
-  ({ id }) => ({
-    board: { id, load: true },
-    notes: { parentId: id, load: true },
-  }),
-  {
-    refetch,
-    hideUntilLoaded: true,
-  }
-)
-```
-
 # API
+
+## Decorator
+
+The options available for each entity are:
+
+- `id` - `string`: the id of the entity we want to get
+- `parentId` - `string`: the id of the parent of the entity or entities we want to get
+- `load` - `bool`: loads the data from the backend (default is false)
+- `then` - `function`: using this option we can filter all the incoming values before they reach our component,
+for example if we want to sort a list, or only show certain parts of it
+- `create` - `bool`: enables create mode, at this point there is no original data, only a draft, and saving will create
+a new entity with a POST (default is false)
+- `onCreate` - `function`: callback for when a new entity was created in create mode
+- `onDel` - `function`: callback for when the entity was deleted
+- `onUpdate` - `function`: callback for when the entity was updated successfully
+
+The options available as the second argument (applies to all entities):
+
+- `refetch` - `function`: a custom instance of Refetch `connect`, see
+[Advanced: Override Refetch defaults.](#advanced-override-refetch-defaults)
+- `hideUntilLoaded` - `bool`: passing `hideUntilLoaded: true` will wait for all initial loads to complete before the
+wrapped component is mounted (default is false)
 
 ## State objects
 
 The state objects `EntityState` and `EntityListState` are the link between your component and Reflorp. They
 contain data and metadata about either a single entity, or a list of entities.
 
-We use the excellent `PromiseState` class from Refetch, which is fully documented
-[over here](https://github.com/heroku/react-refetch/blob/master/docs/api.md#promisestate).
-
-Both state objects below have these properties of the `data` PromiseState available for easier access:
+Both state objects below have these properties:
 - `value` - `array|object`: the actual data as received from the server
 - `pending` - `bool`: true if the data is being fetched for the first time (`value` is null)
 - `refreshing` - `bool`: true if the data is being updated in some way (`value` is present but may soon be outdated)
@@ -338,6 +358,32 @@ until it receives an empty response.
 
 If an empty page has been received the `EntityListState#hasMore` property is set to `false`.
 
+## Advanced: Override Refetch defaults
+
+Refetch has a convenient way to override certain defaults and hook in to internal stuff before and after requests are
+sent. You can do this with Reflorp as well by passing in your own `refetch` function with the `options` object as the
+second parameter to the decorator.
+
+```
+import { connect } from 'react-refetch';
+import { reflorp } from 'react-reflorp';
+
+const refetch = connect.defaults({
+  credentials: 'include',
+});
+
+@reflorp(
+  ({ id }) => ({
+    board: { id, load: true },
+    notes: { parentId: id, load: true },
+  }),
+  {
+    refetch,
+    hideUntilLoaded: true,
+  }
+)
+```
+
 ## Advanced: Customize URL:s
 
 There are two configuration options that can help you here:
@@ -371,6 +417,19 @@ has the following properties:
 - `parentEntity` - `EntityConfiguration`: The configuration for the parent entity, if any
 - `entity` - `string`: The name of this entity type (i e `board`)
 - `plural` - `string`: The plural name of this entity type as configured by you (i e `boards`)
+
+# Known limitations
+
+## Two levels of entities, no multiple parents
+
+We currently only support two levels of entities, and an entity can not have multiple parents. You can still use a
+custom `getUrl` function to achieve this to some extent, via the `query` property, but it won't be as smooth.
+
+# PromiseState
+
+Internally we use the excellent `PromiseState` class from Refetch, which is fully documented
+[over here](https://github.com/heroku/react-refetch/blob/master/docs/api.md#promisestate). The Reflorp state objects are
+basically just wrappers around one or more `PromiseState` objects.
 
 # Support
 
